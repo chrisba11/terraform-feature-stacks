@@ -86,7 +86,7 @@ jobs:
       matrix:
         stack_name:
           - api
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/reusable-workflows/tf_plan.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/tf_plan.yml@main
     with:
       aws_account_id: ${{ vars.DEV_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
@@ -113,7 +113,7 @@ jobs:
       matrix:
         stack_name:
           - api
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/reusable-workflows/tf_apply.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/tf_apply.yml@main
     with:
       aws_account_id: ${{ vars.DEV_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
