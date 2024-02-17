@@ -1,0 +1,195 @@
+name: Terraform Plan
+
+on:
+  workflow_call:
+    inputs:
+      aws_account_id:
+        description: ID of the AWS Account where resources will be deployed
+        type: string
+        required: true
+
+      aws_region:
+        description: AWS region where GitHub IAM role lives
+        type: string
+        required: true
+
+      environment:
+        description: Deployment environment (used for artifact name)
+        type: string
+        required: true
+
+      feature_tag:
+        description: Tag that will be added to feature stack resources
+        type: string
+        required: false
+
+      lambda_artifact_path:
+        description: Directory path where Lambda artifacts will be downloaded.
+        type: string
+        required: false
+
+      role_name:
+        description: Name of IAM Role to assume
+        type: string
+        required: true
+
+      stack_name:
+        description: Name of Terraform stack
+        type: string
+        required: true
+
+      terraform_version:
+        description: Version of Terraform to use in workflow
+        type: string
+        required: true
+
+      tf_backend_name:
+        description: Name of the S3 bucket and DynamoDB table used for Terraform state backend configuration
+        type: string
+        required: true
+
+      tf_backend_key:
+        description: S3 key used for Terraform state backend configuration
+        type: string
+        required: true
+
+      tfvars_path:
+        description: Path to .tfvars file within working directory
+        type: string
+        required: false
+
+      working_directory:
+        description: Path to working directory where Terraform commands should be run
+        type: string
+        required: true
+
+env:
+  ARTIFACT_NAME: ${{ inputs.feature_tag != '' && inputs.feature_tag || inputs.environment }}-${{ inputs.stack_name }}.tfplan
+  # latest commit on branch triggering workflow (helps avoid using merge commit)
+  COMMIT_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+
+jobs:
+  tf-plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    concurrency: ${{ inputs.tf_backend_key }}-${{ inputs.environment }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with: # use latest commit on branch triggering workflow
+          ref: ${{ env.COMMIT_SHA }}
+
+      - name: Get Build Version
+        run: |
+          short_sha=$(echo ${{ env.COMMIT_SHA }} | cut -c 1-7)
+          now=$(date +'%Y-%m-%d_%H-%M-%S-%3N')
+          build_version=${now}_${short_sha}
+          echo "BUILD_VERSION=$(echo $build_version)" >> $GITHUB_ENV
+
+      - name: Download Lambda Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ inputs.working_directory }}/artifacts
+          merge-multiple: true
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::${{ inputs.aws_account_id }}:role/${{ inputs.role_name }}
+          aws-region: ${{ inputs.aws_region }}
+          role-duration-seconds: 3600
+          role-session-name: ${{ github.event.repository.name }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ inputs.terraform_version }}
+          terraform_wrapper: false
+
+      - name: Terraform Format Check
+        working-directory: ${{ inputs.working_directory }}
+        run: terraform fmt -recursive -check
+
+      - name: Terraform Init
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ inputs.tf_backend_name }}" \
+            -backend-config="dynamodb_table=${{ inputs.tf_backend_name }}" \
+            -backend-config="key=${{ inputs.tf_backend_key }}.tfstate"
+
+      - name: Terraform Validate
+        working-directory: ${{ inputs.working_directory }}
+        run: terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+
+          # check if .tfvars filepath was specified & if it's valid
+          if [[ -n "${{ inputs.tfvars_path }}" ]]; then
+            if [[ -f "${{ inputs.tfvars_path }}" ]]; then
+              TFVARS_PATH_ARG="-var-file=${{ inputs.tfvars_path }}"
+            else
+              echo "Error: Specified .tfvars file does not exist at path supplied via 'tfvars_path' input."
+              exit 1
+            fi
+          else
+            TFVARS_PATH_ARG=""
+          fi
+
+          # set feature_tag arg if supplied via input
+          if [[ -n "${{ inputs.feature_tag }}" ]]; then
+            FEATURE_TAG_ARG="-var=feature_tag=${{ inputs.feature_tag }}"
+          else
+            FEATURE_TAG_ARG=""
+          fi
+
+          # set lambda_zip_directory arg if supplied via input
+          if [[ -n "${{ inputs.lambda_artifact_path }}" ]]; then
+            LAMBDA_PACKAGE_ARG="-var=lambda_zip_directory=${{ inputs.lambda_artifact_path }}"
+          else
+            LAMBDA_PACKAGE_ARG=""
+          fi
+
+          # allow non-zero exit code without failure
+          set +e
+
+          terraform plan -detailed-exitcode \
+            -var="aws_account_id=${{ inputs.aws_account_id }}" \
+            -var="repository=$GITHUB_REPOSITORY" \
+            $FEATURE_TAG_ARG \
+            $LAMBDA_PACKAGE_ARG \
+            $TFVARS_PATH_ARG \
+            -out="${{ env.BUILD_VERSION }}-${{ env.ARTIFACT_NAME }}"
+
+          # capture exit code from previous command
+          plan_exit_code=$?
+
+          # reset default exit code failure behavior
+          set -e
+
+          # -detailed-exitcode will exit with status of 2 if it finds changes in the plan,
+          # exit status code 1 means there was an error in the plan,
+          # exit status code 0 means no changes are found and there are no errors
+          if [[ $plan_exit_code -eq 2 ]]; then
+            # if exit code from plan command is 2, set 'changes' boolean to true
+            changes=true
+          elif [[ $plan_exit_code -eq 1 ]]; then
+            # if exit code is 1, cause step to fail
+            exit 1
+          fi
+
+          # print value of 'changes' for visibility
+          echo "changes=${changes}"
+          # set environment variable with 'changes' value to allow conditional run of next step
+          echo "CHANGES=${changes}" >> $GITHUB_OUTPUT
+
+      - name: Upload Plan Artifact
+        if: steps.plan.outputs.CHANGES == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ inputs.working_directory }}/${{ env.BUILD_VERSION }}-${{ env.ARTIFACT_NAME }}

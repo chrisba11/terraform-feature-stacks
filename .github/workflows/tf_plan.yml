@@ -1,0 +1,48 @@
+name: Terraform Plan
+
+run-name: Terraform Plan - Dev, Test, Prod
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+    paths-ignore:
+      - '**/README.md'
+      - '**/.gitignore'
+      - './docs/**'
+
+permissions:
+  contents: read
+  id-token: write
+
+
+jobs:
+  tf-plan:
+    name: Terraform Plan
+    strategy:
+      fail-fast: false
+      matrix:
+        stack_name:
+          - api
+          - oidc
+          - vpc
+        environment:
+          - [dev, '${{ vars.DEV_ACCOUNT_ID }}']
+          - [test, '${{ vars.TEST_ACCOUNT_ID }}']
+          - [prod, '${{ vars.PROD_ACCOUNT_ID }}']
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/reusable-workflows/tf_plan.yml@main
+    with:
+      aws_account_id: ${{ matrix.environment[1] }}
+      aws_region: ${{ vars.AWS_REGION }}
+      environment: ${{ matrix.environment[0] }}
+      role_name: GithubActionsRole-ReadOnly
+      stack_name: ${{ matrix.stack_name }}
+      terraform_version: =1.7.0
+      tf_backend_name: ${{ vars.TF_BACKEND_PREFIX }}-${{ matrix.environment[0] }}
+      tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.stack_name }}
+      tfvars_path: ./environments/${{ matrix.environment[0] }}.tfvars
+      working_directory: infra/tf/stacks/${{ matrix.stack_name }}

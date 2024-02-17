@@ -1,0 +1,83 @@
+name: Build Python Lambda
+
+on:
+  workflow_call:
+    inputs:
+      aws_region:
+        description: AWS region used in testing
+        required: false
+        type: string
+
+      python_version:
+        description: Python version to use for the Lambda function runtime
+        required: true
+        type: string
+
+      lambda_name:
+        description: Name of Lambda function
+        required: true
+        type: string
+
+      src_directory:
+        description: Path to Lambda source files
+        required: true
+        type: string
+
+      tests_directory:
+        description: Path to Lambda test files
+        required: false
+        type: string
+
+env:
+  # latest commit on branch triggering workflow (helps avoid using merge commit)
+  COMMIT_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+
+jobs:
+  build:
+    name: Build Lambda Zip Archive
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with: # use latest commit on branch triggering workflow
+          ref: ${{ env.COMMIT_SHA }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ inputs.python_version }}
+
+      - name: Install Dependencies
+        working-directory: ${{ inputs.src_directory }}/lambda_function
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpq-dev
+
+          python -m venv venv
+          source venv/bin/activate
+
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+          deactivate
+
+      - name: Unit Tests
+        if: ${{ inputs.tests_directory != '' }}
+        working-directory: ${{ inputs.tests_directory }}
+        run: |
+          export AWS_REGION=${{ inputs.aws_region }}
+          pytest
+
+      - name: Build Lambda & Zip
+        working-directory: ${{ inputs.src_directory }}
+        run: |
+          sam build
+          cd .aws-sam/build/LambdaFunction
+          zip -r ../../../${{ inputs.lambda_name }}.zip .
+
+      - name: Upload Lambda Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.lambda_name }}.zip
+          path: ${{ inputs.src_directory }}/${{ inputs.lambda_name }}.zip

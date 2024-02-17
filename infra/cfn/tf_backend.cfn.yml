@@ -1,0 +1,168 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploys resources needed to manage Terraform state
+
+Parameters:
+  EnvironmentTag:
+    Type: String
+    Description: Name of the environment these resources will be associated with.
+  ProjectTag:
+    Type: String
+    Description: Name of the project that will use these resources.
+  RepositoryNameTag:
+    Type: String
+    Description: Name of the repository where the template file for this stack lives.
+  StateResourceName:
+    Type: String
+    Description: Name for the state resources, which will be used for S3 buckets and a DynamoDB table. The name must be lowercase, between 3 and 58 characters, can include numbers and hyphens, and must start with a letter or number.
+    AllowedPattern: "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$"
+    ConstraintDescription: The name must be lowercase, between 3 and 58 characters, can include numbers and hyphens, and must start with a letter or number.
+    MaxLength: 58
+
+
+Resources:
+# This is where the access logs for the Terraform state bucket will live
+  TerraformStateLogsBucket:
+    Type: AWS::S3::Bucket
+    # These delete and update/replace policy settings avoid changes made to these
+    # resources when the Cloudformation stack is updated or deleted
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub '${StateResourceName}-logs' # references input parameter
+      BucketEncryption: 
+        ServerSideEncryptionConfiguration: 
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      Tags:
+        - Key: "Environment"
+          Value: !Ref EnvironmentTag
+        - Key: "Project"
+          Value: !Ref ProjectTag
+        - Key: "Repo"
+          Value: !Ref RepositoryNameTag
+
+# This is where the state files for all Terraform config across the project will live
+  TerraformStateBucket:
+    Type: AWS::S3::Bucket
+    DependsOn:
+      - TerraformStateLogsBucket
+    # These delete and update/replace policy settings avoid changes made to these
+    # resources when the Cloudformation stack is updated or deleted
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Ref StateResourceName
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption: 
+        ServerSideEncryptionConfiguration: 
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LoggingConfiguration:
+        DestinationBucketName: !Sub '${StateResourceName}-logs' # references input parameter
+        LogFilePrefix: TFStateLogs/
+      Tags:
+        - Key: "Environment"
+          Value: !Ref EnvironmentTag
+        - Key: "Project"
+          Value: !Ref ProjectTag
+        - Key: "Repo"
+          Value: !Ref RepositoryNameTag
+
+# S3 Bucket Policy disabling anything from deleting objects in the logs bucket
+  TerraformStateLogsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Bucket: !Ref TerraformStateLogsBucket
+      PolicyDocument:
+        Statement:
+          - Sid: DenyDeletingTerraformStateLogs
+            Effect: Deny
+            Principal:
+              AWS: "*"
+            Action:
+              - "s3:DeleteBucket"
+              - "s3:DeleteObject"
+              - "s3:DeleteObjectVersion"
+            Resource:
+              - !GetAtt TerraformStateLogsBucket.Arn
+              - !Sub "${TerraformStateLogsBucket.Arn}/*"
+          - Sid: S3ServerAccessLogsPolicy
+            Effect: Allow
+            Principal:
+              Service: "logging.s3.amazonaws.com"
+            Action:
+              - "s3:PutObject"
+            Resource:
+              - !Sub "${TerraformStateLogsBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                "aws:SourceAccount": !Ref "AWS::AccountId"
+              ArnLike:
+                "aws:SourceArn": !GetAtt TerraformStateLogsBucket.Arn
+
+# S3 Bucket Policy disabling anything from deleting objects in the state file bucket
+  TerraformStateBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      Bucket: !Ref TerraformStateBucket
+      PolicyDocument:
+        Statement:
+          - Sid: DenyDeletingTerraformStateFiles
+            Effect: Deny
+            Principal:
+              AWS: "*"
+            Action:
+              - "s3:DeleteBucket"
+              - "s3:DeleteObject"
+              - "s3:DeleteObjectVersion"
+            Resource:
+              - !GetAtt TerraformStateBucket.Arn
+              - !Sub "${TerraformStateBucket.Arn}/*"
+  
+  # This table will contain the lock files for the Terraform state that help to keep
+  # multiple users or pipelines from manipulating the same state file simultaneously
+  TerraformStateLockTable:
+    Type: AWS::DynamoDB::Table
+    # These delete and update/replace policy settings avoid changes made to these
+    # resources when the Cloudformation stack is updated or deleted
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: !Ref StateResourceName # references input parameter
+      AttributeDefinitions:
+        - AttributeName: LockID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: LockID
+          KeyType: HASH
+      DeletionProtectionEnabled: True
+      BillingMode: PAY_PER_REQUEST
+      SSESpecification:
+        SSEEnabled: True
+      Tags:
+        - Key: "Environment"
+          Value: !Ref EnvironmentTag
+        - Key: "Project"
+          Value: !Ref ProjectTag
+        - Key: "Repo"
+          Value: !Ref RepositoryNameTag
+
+
+Outputs:
+  StackName:
+    Description: Name of this stack being used to provision Terraform state infrastructure.
+    Value: !Ref AWS::StackName
+  StateBucketARN:
+    Description: ARN of the Terraform state bucket used across the organization.
+    Value: !GetAtt TerraformStateBucket.Arn
+  StateLogsBucketARN:
+    Description: ARN of the bucket used to retain Terraform state bucket access logs.
+    Value: !GetAtt TerraformStateLogsBucket.Arn
+  LockTableARN:
+    Description: ARN of the table used to store Terraform state lock files across the organization.
+    Value: !GetAtt TerraformStateLockTable.Arn

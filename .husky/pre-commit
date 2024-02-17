@@ -1,0 +1,105 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# ANSI color codes
+RED='\033[0;31m'    # Red color
+YELLOW='\033[1;33m' # Yellow color
+NC='\033[0m'        # No color (reset)
+
+
+###########
+# Linting #
+###########
+
+# Runs lint-staged, which currently just uses secret-lint to check for secrets in staged files 
+npx lint-staged
+
+
+#####################
+# Branch Name Check #
+#####################
+
+# This is the code used to identify this project in our project management software
+PROJECT_CODE="ABC"
+# Lowercase project code
+PROJECT_CODE_LOWER=$(echo "$PROJECT_CODE" | awk '{print tolower($0)}')
+
+# Get current branch name
+BRANCH_NAME=$(git branch --show-current)
+# Lowercase branch name
+BRANCH_NAME_LOWER=$(echo "$BRANCH_NAME" | awk '{print tolower($0)}')
+
+# Set the regex pattern that branch names must adhere to
+# This ensures our CI scripts are able to use the branch name to create a feature tag
+REGEX_PATTERN="^(main|release|((revert-\d+-)?(feature|task|bugfix|hotfix|docs|refactor|test)/${PROJECT_CODE_LOWER}-[0-9X]{1,4}-.+))$"
+
+# If the branch name does not conform, provide feedback to developer and fail
+if [[ ! $BRANCH_NAME_LOWER =~ $REGEX_PATTERN ]]; then
+  echo "\n${RED}Branch name, '${BRANCH_NAME}', does not meet naming standards.${NC}\n\n" \
+    "Naming must be similar to the following format:\n" \
+    "'feature/${PROJECT_CODE}-123-some-short-description'" \
+    "or 'Docs/${PROJECT_CODE_LOWER}-321-descriptive-text'.\n\n" \
+    "The prefix for the branch name may contain 'feature/', 'task/', 'bugfix/', 'hotfix/',\n" \
+    "'docs/', 'refactor/', or 'test/' and should be immediately followed by the ticket number,\n" \
+    "then a '-' and a short description.\n\n" \
+    "The ticket number (i.e. ABCD-123) is what is used to generate a feature tag.\n\n" \
+    "Branch names are case-insensitive.\n\n" \
+    "Run 'git branch -m <new-branch-name>' to rename this branch before committing.\n"
+  exit 1
+fi
+
+
+##################
+# Update TF Docs #
+##################
+
+# Run the update_tf_docs script
+./scripts/update_tf_docs.sh
+
+# Check for modified files
+MODIFIED_FILES=$(git status --porcelain | grep -E "^ M" | awk '{print $2}')
+if [ -z "$MODIFIED_FILES" ]; then
+  # No changes detected, continue with commit
+  exit 0
+fi
+
+echo "It looks like the Terraform configuration has changed." \
+  "Documentation has been updated to reflect these changes.\n" \
+  "If you want to accept these changes, press 'Y' and then run" \
+  "'git add' for the following files and re-commit:\n"
+
+echo "$MODIFIED_FILES" | while read -r file; do
+  echo "  - $file"
+done
+
+echo "\nTo ignore these changes, press 'N'."
+
+while true; do
+  # Wait for user input
+  printf "Do you want to accept the documentation changes? (Y/N): "
+  read user_choice
+
+  case $user_choice in
+    [Yy]* )
+      # User accepted changes, remind them to add files in yellow
+      printf "${YELLOW}Please run 'git add' on the following updated documentation files and re-commit:\n${NC}"
+      echo "$MODIFIED_FILES" | while read -r file; do
+        printf "${YELLOW}  - $file\n${NC}"
+      done
+      exit 1
+      ;;
+    [Nn]* )
+      # User rejected changes, revert modifications
+      echo "$MODIFIED_FILES" | while read -r file; do
+        git checkout -- "$file"
+      done
+      exit 0
+      ;;
+    * )
+      # Invalid input, ask again
+      echo "Invalid input. Please enter Y or N."
+      ;;
+  esac
+done
+
+exit 0

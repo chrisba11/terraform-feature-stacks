@@ -1,0 +1,142 @@
+name: Terraform Apply
+
+on:
+  workflow_call:
+    inputs:
+      aws_account_id:
+        description: ID of the AWS Account where resources will be deployed
+        required: true
+        type: string
+
+      aws_region:
+        description: AWS region where GitHub IAM role lives
+        required: true
+        type: string
+
+      environment:
+        description: Deployment environment (used for environment protection)
+        required: true
+        type: string
+
+      feature_tag:
+        description: Tag that will be added to feature stack resources
+        required: false
+        type: string
+
+      role_name:
+        description: Name of IAM Role to assume
+        required: true
+        type: string
+
+      stack_name:
+        description: Name of Terraform stack
+        required: true
+        type: string
+
+      terraform_version:
+        description: Version of Terraform to use in workflow
+        required: true
+        type: string
+
+      tf_backend_name:
+        description: Name of the S3 bucket and DynamoDB table used for Terraform state backend configuration
+        required: true
+        type: string
+
+      tf_backend_key:
+        description: S3 key used for Terraform state backend configuration
+        required: true
+        type: string
+
+      working_directory:
+        description: Path to working directory where Terraform commands should be run
+        required: true
+        type: string
+
+env:
+  ARTIFACT_NAME: ${{ inputs.feature_tag != '' && inputs.feature_tag || inputs.environment }}-${{ inputs.stack_name }}.tfplan
+  # latest commit on branch triggering workflow (helps avoid using merge commit)
+  COMMIT_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+
+jobs:
+  tf-apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    concurrency: ${{ inputs.tf_backend_key }}-${{ inputs.environment }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with: # use latest commit on branch triggering workflow
+          ref: ${{ env.COMMIT_SHA }}
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ inputs.working_directory }}/artifacts
+
+      - name: Set Artifact Output
+        id: artifact
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+
+          # allow non-zero exit code without failure
+          set +e
+          # set variable defaults
+          exists=false
+          plan_file=does-not-exist
+          # attempt to change into artifacts directory - will fail if no artifacts
+          cd artifacts
+          # see if artifact was downloaded for this environment/stack combination
+          ls | grep -w "${{ env.ARTIFACT_NAME }}"
+          # capture exit code from previous command
+          artifact_exists=$?
+          # reset default exit code failure behavior
+          set -e
+
+          # if the artifact we are looking for exists
+          if [[ $artifact_exists -eq 0 ]]; then
+            # set 'exists' value to true
+            exists=true
+            # navigate to artifact directory
+            cd ${{ env.ARTIFACT_NAME }}
+            # set 'plan_file' value to name of .tfplan file inside artifact directory
+            # in some cases, on rerunning the workflow job, there may be more than one file
+            # set value to name of most recent plan file
+            plan_file=$(ls | sort | tail -n 1)
+          fi
+
+          echo "exists = ${exists}"
+          echo "plan_file = ${plan_file}"
+          echo "EXISTS=${exists}" >> $GITHUB_OUTPUT
+          echo "PLAN_FILE=${plan_file}" >> $GITHUB_OUTPUT
+
+      - name: Configure AWS Credentials
+        if: steps.artifact.outputs.EXISTS == 'true'
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::${{ inputs.aws_account_id }}:role/${{ inputs.role_name }}
+          aws-region: ${{ inputs.aws_region }}
+          role-duration-seconds: 3600
+          role-session-name: ${{ github.event.repository.name }}
+
+      - name: Setup Terraform
+        if: steps.artifact.outputs.EXISTS == 'true'
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ inputs.terraform_version }}
+
+      - name: Terraform Init
+        if: steps.artifact.outputs.EXISTS == 'true'
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ inputs.tf_backend_name }}" \
+            -backend-config="dynamodb_table=${{ inputs.tf_backend_name }}" \
+            -backend-config="key=${{ inputs.tf_backend_key }}.tfstate"
+
+      - name: Terraform Apply
+        if: steps.artifact.outputs.EXISTS == 'true'
+        working-directory: ${{ inputs.working_directory }}
+        run: terraform apply artifacts/${{ env.ARTIFACT_NAME }}/${{ steps.artifact.outputs.PLAN_FILE }}

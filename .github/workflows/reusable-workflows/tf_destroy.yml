@@ -1,0 +1,138 @@
+name: Terraform Destroy
+
+on:
+  workflow_call:
+    inputs:
+      aws_account_id:
+        description: ID of the AWS Account where resources are deployed
+        required: true
+        type: string
+
+      aws_region:
+        description: AWS region where GitHub IAM role lives
+        required: true
+        type: string
+
+      environment:
+        description: Deployment environment (used for environment protection)
+        required: true
+        type: string
+
+      feature_tag:
+        description: Tag that will be added to feature stack resources
+        required: false
+        type: string
+
+      resource_targets:
+        description: Comma-separated list of resources to target for destruction
+        required: false
+        type: string
+
+      role_name:
+        description: Name of IAM Role to assume
+        required: true
+        type: string
+
+      terraform_version:
+        description: Version of Terraform to use in workflow
+        required: true
+        type: string
+
+      tf_backend_name:
+        description: Name of the S3 bucket and DynamoDB table used for Terraform state backend configuration
+        required: true
+        type: string
+
+      tf_backend_key:
+        description: S3 key used for Terraform state backend configuration
+        required: true
+        type: string
+
+      tfvars_path:
+        description: Path to .tfvars file within working directory
+        required: false
+        type: string
+
+      working_directory:
+        description: Path to working directory where Terraform commands should be run
+        required: true
+        type: string
+
+
+jobs:
+  tf-destroy:
+    name: Terraform Destroy
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    concurrency: ${{ inputs.tf_backend_key }}-${{ inputs.environment }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.feature_tag }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          role-to-assume: arn:aws:iam::${{ inputs.aws_account_id }}:role/${{ inputs.role_name }}
+          aws-region: ${{ inputs.aws_region }}
+          role-duration-seconds: 3600
+          role-session-name: ${{ github.event.repository.name }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ inputs.terraform_version }}
+
+      - name: Terraform Init
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ inputs.tf_backend_name }}" \
+            -backend-config="dynamodb_table=${{ inputs.tf_backend_name }}" \
+            -backend-config="key=${{ inputs.tf_backend_key }}.tfstate"
+
+      - name: Terraform Destroy
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+
+          # Check if .tfvars filepath was specified & if it's valid
+          if [[ -n "${{ inputs.tfvars_path }}" ]]; then
+            if [[ -f "${{ inputs.tfvars_path }}" ]]; then
+              TFVARS_PATH_ARG="-var-file=${{ inputs.tfvars_path }}"
+            else
+              echo "Error: Specified .tfvars file does not exist at path supplied via 'tfvars_path' input."
+              exit 1
+            fi
+          else
+            TFVARS_PATH_ARG=""
+          fi
+
+          # Set feature_tag arg if supplied via input
+          if [[ -n "${{ inputs.feature_tag }}" ]]; then
+            FEATURE_TAG_ARG="-var=feature_tag=${{ inputs.feature_tag }}"
+          else
+            FEATURE_TAG_ARG=""
+          fi
+
+          # Initialize an empty string for target arguments
+          TARGET_ARGS=""
+
+          # Check if resource_targets input is provided
+          if [[ -n "${{ inputs.resource_targets }}" ]]; then
+            # Convert the comma-separated list into an array
+            IFS=',' read -r -a targets <<< "${{ inputs.resource_targets }}"
+
+            # Loop through the array and append each target with -target= prefix
+            for target in "${targets[@]}"; do
+              TARGET_ARGS+=" -target=$target"
+            done
+          fi
+
+          # Terraform destroy command with dynamic arguments
+          terraform destroy \
+            $TFVARS_PATH_ARG \
+            -var="aws_account_id=${{ inputs.aws_account_id }}" \
+            $FEATURE_TAG_ARG \
+            $TARGET_ARGS \
+            -auto-approve

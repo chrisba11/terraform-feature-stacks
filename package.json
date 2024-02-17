@@ -1,0 +1,19 @@
+{
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "*": [
+      "secretlint"
+    ]
+  },
+  "devDependencies": {
+    "@secretlint/secretlint-rule-preset-recommend": "^7.0.7",
+    "husky": "^8.0.0",
+    "lint-staged": "^14.0.1",
+    "secretlint": "^7.0.7"
+  }
+}
