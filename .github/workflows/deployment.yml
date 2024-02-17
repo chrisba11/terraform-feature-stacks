@@ -79,7 +79,7 @@ jobs:
       matrix:
         stack_name:
           - oidc
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/tf_plan.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/rw_tf_plan.yml@main
     with:
       aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
@@ -105,7 +105,7 @@ jobs:
       matrix:
         stack_name:
           - oidc
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/tf_apply.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/rw_tf_apply.yml@main
     with:
       aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
@@ -130,7 +130,7 @@ jobs:
       matrix:
         stack_name:
           - vpc
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/tf_plan.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/rw_tf_plan.yml@main
     with:
       aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
@@ -156,7 +156,7 @@ jobs:
       matrix:
         stack_name:
           - oidc
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/tf_apply.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/rw_tf_apply.yml@main
     with:
       aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
@@ -181,7 +181,7 @@ jobs:
       matrix:
         lambda_name:
           - ImageDownload
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/build_python_lambda.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/rw_build_python_lambda.yml@main
     with:
       aws_region: ${{ vars.AWS_REGION }}
       lambda_name: ${{ matrix.lambda_name }}
@@ -201,7 +201,7 @@ jobs:
       matrix:
         stack_name:
           - api
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/tf_plan.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/rw_tf_plan.yml@main
     with:
       aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
@@ -227,7 +227,7 @@ jobs:
       matrix:
         stack_name:
           - api
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/tf_apply.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/rw_tf_apply.yml@main
     with:
       aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}

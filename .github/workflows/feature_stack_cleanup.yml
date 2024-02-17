@@ -80,7 +80,7 @@ jobs:
         stack_name:
           - api
     if: ${{ needs.env-vars.outputs.CONTINUE == 'true' }}
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/tf_destroy.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/rw_tf_destroy.yml@main
     with:
       aws_account_id: ${{ vars.DEV_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}

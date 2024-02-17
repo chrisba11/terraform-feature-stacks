@@ -34,7 +34,7 @@ jobs:
           - [dev, '${{ vars.DEV_ACCOUNT_ID }}']
           - [test, '${{ vars.TEST_ACCOUNT_ID }}']
           - [prod, '${{ vars.PROD_ACCOUNT_ID }}']
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/reusable-workflows/tf_plan.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/rw_tf_plan.yml@main
     with:
       aws_account_id: ${{ matrix.environment[1] }}
       aws_region: ${{ vars.AWS_REGION }}
