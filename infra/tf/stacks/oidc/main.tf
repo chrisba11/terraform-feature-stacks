@@ -80,6 +80,8 @@ data "aws_iam_policy_document" "permissions_readonly" {
       "s3:GetObjectTagging",
       "s3:GetReplicationConfiguration",
       "s3:ListBucket",
+      "s3:ListBucketMultipartUploads",
+      "s3:ListMultipartUploadParts",
     ]
     resources = ["*"]
   }
@@ -143,6 +145,7 @@ data "aws_iam_policy_document" "permissions_write" {
       "logs:CreateLogGroup",
       "logs:PutRetentionPolicy",
       "logs:TagLogGroup",
+      "s3:AbortMultipartUpload",
       "s3:CreateBucket",
       "s3:PutBucketAcl",
       "s3:PutBucketCORS",
