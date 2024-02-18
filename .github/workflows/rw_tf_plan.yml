@@ -94,7 +94,7 @@ jobs:
           merge-multiple: true
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::${{ inputs.aws_account_id }}:role/${{ inputs.role_name }}
           aws-region: ${{ inputs.aws_region }}

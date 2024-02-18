@@ -81,6 +81,8 @@ jobs:
         working-directory: ${{ inputs.working_directory }}
         run: |
 
+          tree 
+          
           # allow non-zero exit code without failure
           set +e
           # set variable defaults
@@ -114,7 +116,7 @@ jobs:
 
       - name: Configure AWS Credentials
         if: steps.artifact.outputs.EXISTS == 'true'
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::${{ inputs.aws_account_id }}:role/${{ inputs.role_name }}
           aws-region: ${{ inputs.aws_region }}
