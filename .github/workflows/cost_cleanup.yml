@@ -61,11 +61,11 @@ jobs:
             for STACK in "${STACK_ARRAY[@]}"; do
               # Logic to match environment to account ID (adjust as needed)
               if [[ $ENV == "dev" ]]; then
-                ACCOUNT_ID_VAR="DEV_ACCOUNT_ID"
+                ACCOUNT_ID="${{ vars.DEV_ACCOUNT_ID }}"
               elif [[ $ENV == "test" ]]; then
-                ACCOUNT_ID_VAR="TEST_ACCOUNT_ID"
+                ACCOUNT_ID="${{ vars.TEST_ACCOUNT_ID }}"
               elif [[ $ENV == "prod" ]]; then
-                ACCOUNT_ID_VAR="PROD_ACCOUNT_ID"
+                ACCOUNT_ID="${{ vars.PROD_ACCOUNT_ID }}"
               fi
               # Construct JSON object for matrix
               MATRIX="${MATRIX}{\"environment\": [\"${ENV}\", \"${ACCOUNT_ID}\"], \"stack_name\": \"${STACK}\"},"
