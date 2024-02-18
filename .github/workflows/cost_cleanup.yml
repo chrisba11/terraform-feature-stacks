@@ -92,7 +92,7 @@ jobs:
       - env-vars
     strategy:
       fail-fast: false
-      matrix: ${{fromJson(needs.env-vars.outputs.matrix)}}
+      matrix: ${{ fromJson(needs.env-vars.outputs.MATRIX) }}
     uses: chrisba11/terraform-feature-stacks/.github/workflows/rw_tf_destroy.yml@main
     with:
       aws_account_id: ${{ matrix.environment[1] }}
