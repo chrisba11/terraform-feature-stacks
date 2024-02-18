@@ -155,7 +155,7 @@ jobs:
       fail-fast: false
       matrix:
         stack_name:
-          - oidc
+          - vpc
     uses: chrisba11/terraform-feature-stacks/.github/workflows/rw_tf_apply.yml@main
     with:
       aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
