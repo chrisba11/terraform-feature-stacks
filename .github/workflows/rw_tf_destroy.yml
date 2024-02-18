@@ -133,6 +133,7 @@ jobs:
           terraform destroy \
             $TFVARS_PATH_ARG \
             -var="aws_account_id=${{ inputs.aws_account_id }}" \
+            -var="repository=$GITHUB_REPOSITORY" \
             $FEATURE_TAG_ARG \
             $TARGET_ARGS \
             -auto-approve
