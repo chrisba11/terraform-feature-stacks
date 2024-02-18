@@ -69,7 +69,7 @@ jobs:
               fi
               # Construct JSON object for matrix
               MATRIX="${MATRIX}{\"environment\": [\"${ENV}\", \"${ACCOUNT_ID}\"], \"stack_name\": \"${STACK}\"},"
-            done            done
+            done
           done
           MATRIX="${MATRIX%,}]"
 
