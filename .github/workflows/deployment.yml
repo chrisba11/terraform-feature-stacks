@@ -122,7 +122,7 @@ jobs:
     name: Terraform Plan - VPC
     needs:
       - env-vars
-      - tf-plan-oidc
+      - tf-apply-oidc
     # using the matrix strategy here because the 'env' context is not available
     # this gives us the ability to define the stack name once and use many times in the inputs
     strategy:
@@ -173,7 +173,7 @@ jobs:
     name: Build Lambda Package
     needs:
       - env-vars
-      - tf-plan-vpc
+      - tf-apply-vpc
     # using the matrix strategy here because the 'env' context is not available
     # this gives us the ability to define the lambda name once and use many times in the inputs
     strategy:
