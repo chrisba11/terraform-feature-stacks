@@ -82,8 +82,8 @@ jobs:
             RESOURCE_TARGETS="${VPC_TARGETS}"
           fi
 
-          echo "matrix=$MATRIX" >> $GITHUB_ENV
-          echo "resource_targets=${RESOURCE_TARGETS}" >> $GITHUB_ENV
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+          echo "resource_targets=${RESOURCE_TARGETS}" >> $GITHUB_OUTPUT
 
 
   test:
