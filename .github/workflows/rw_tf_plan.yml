@@ -128,6 +128,8 @@ jobs:
         working-directory: ${{ inputs.working_directory }}
         run: |
 
+          # display file structure of current directory and subdirectories
+          tree -a
           # check if .tfvars filepath was specified & if it's valid
           if [[ -n "${{ inputs.tfvars_path }}" ]]; then
             if [[ -f "${{ inputs.tfvars_path }}" ]]; then
