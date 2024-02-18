@@ -81,8 +81,8 @@ jobs:
         working-directory: ${{ inputs.working_directory }}
         run: |
 
-          tree 
-          
+          # display file structure of current directory and subdirectories
+          tree -a
           # allow non-zero exit code without failure
           set +e
           # set variable defaults
@@ -109,6 +109,7 @@ jobs:
             plan_file=$(ls | sort | tail -n 1)
           fi
 
+          echo "artifact_name = ${{ env.ARTIFACT_NAME }}"
           echo "exists = ${exists}"
           echo "plan_file = ${plan_file}"
           echo "EXISTS=${exists}" >> $GITHUB_OUTPUT
