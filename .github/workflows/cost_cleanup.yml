@@ -86,15 +86,6 @@ jobs:
           echo "resource_targets=${RESOURCE_TARGETS}" >> $GITHUB_OUTPUT
 
 
-  test:
-    runs-on: ubuntu-latest
-    needs: 
-      - env-vars
-    steps:
-      - name: Tell me what is happening
-        run: echo ${{ needs.env-vars.outputs.MATRIX }}
-
-
   tf-destroy:
     name: Terraform Cleanup
     needs: 
