@@ -50,7 +50,7 @@ jobs:
 
           ENVS="${{ github.event.inputs.environments }}"
           STACKS="${{ github.event.inputs.stack_names }}"
-          MATRIX="["
+          MATRIX="{\"include\": ["
 
           # Split environments and stack names into arrays
           IFS=',' read -ra ENV_ARRAY <<< "$ENVS"
@@ -71,7 +71,7 @@ jobs:
               MATRIX="${MATRIX}{\"environment\": [\"${ENV}\", \"${ACCOUNT_ID}\"], \"stack_name\": \"${STACK}\"},"
             done
           done
-          MATRIX="${MATRIX%,}]"
+          MATRIX="${MATRIX%,}]}"
 
           echo "MATRIX = $MATRIX"
 
@@ -92,7 +92,7 @@ jobs:
       - env-vars
     steps:
       - name: Tell me what is happening
-        run: echo ${{ fromJson(needs.env-vars.outputs.MATRIX) }}
+        run: echo ${{ needs.env-vars.outputs.MATRIX }}
 
 
   tf-destroy:
