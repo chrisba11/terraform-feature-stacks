@@ -13,7 +13,7 @@ STACK_PATHS=$(find "$STACKS_DIR" -mindepth 1 -maxdepth 1 -type d | sort -u)
 # Loop through each stack path and run terraform-docs
 for STACK_PATH in $STACK_PATHS; do
   echo "Updating Terraform docs for stack: $STACK_PATH"
-  terraform-docs -c ../../.terraform-docs.yml "$STACK_PATH"
+  terraform-docs -c $ROOT_DIR/infra/tf/.terraform-docs.yml "$STACK_PATH"
 done
 
 # Output the list of stack paths (optional)
