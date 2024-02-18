@@ -37,17 +37,17 @@ jobs:
     name: Set Env Vars as Outputs
     runs-on: ubuntu-latest
     outputs:
-      RESOURCE_TARGETS: ${{ steps.set-targets.outputs.resource_targets }}
+      RESOURCE_TARGETS: ${{ github.event_name == 'workflow_dispatch' && steps.manual-targets.outputs.resource_targets || steps.scheduled-targets.outputs.resource_targets }}
     steps:
       - name: Set Targets for Manual Trigger
         if: ${{ github.event_name == 'workflow_dispatch' }}
-        id: set-targets
+        id: manual-targets
         run: |
           echo "resource_targets=${{ github.event.inputs.resource_targets }}" >> $GITHUB_ENV
 
       - name: Set Targets for Scheduled Run
         if: ${{ github.event_name == 'schedule' }}
-        id: set-targets
+        id: scheduled-targets
         run: |
           # Grab preset target values from environment variable
           echo "resource_targets=$VPC_TARGETS" >> $GITHUB_ENV
