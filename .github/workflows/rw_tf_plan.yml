@@ -5,63 +5,63 @@ on:
     inputs:
       aws_account_id:
         description: ID of the AWS Account where resources will be deployed
-        type: string
         required: true
+        type: string
 
       aws_region:
         description: AWS region where GitHub IAM role lives
-        type: string
         required: true
+        type: string
 
       environment:
         description: Deployment environment (used for artifact name)
-        type: string
         required: true
+        type: string
 
       feature_tag:
         description: Tag that will be added to feature stack resources
-        type: string
         required: false
+        type: string
 
       lambda_artifact_path:
         description: Directory path where Lambda artifacts will be downloaded.
-        type: string
         required: false
+        type: string
 
       role_name:
         description: Name of IAM Role to assume
-        type: string
         required: true
+        type: string
 
       stack_name:
         description: Name of Terraform stack
-        type: string
         required: true
+        type: string
 
       terraform_version:
         description: Version of Terraform to use in workflow
-        type: string
         required: true
+        type: string
 
       tf_backend_name:
         description: Name of the S3 bucket and DynamoDB table used for Terraform state backend configuration
-        type: string
         required: true
+        type: string
 
       tf_backend_key:
         description: S3 key used for Terraform state backend configuration
-        type: string
         required: true
+        type: string
 
       tfvars_path:
         description: Path to .tfvars file within working directory
-        type: string
         required: false
+        type: string
 
       working_directory:
         description: Path to working directory where Terraform commands should be run
-        type: string
         required: true
+        type: string
 
 env:
   ARTIFACT_NAME: ${{ inputs.feature_tag != '' && inputs.feature_tag || inputs.environment }}-${{ inputs.stack_name }}.tfplan

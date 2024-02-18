@@ -4,9 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       feature_tag:
-        description: What is the feature tag? (i.e. tapr123)
-        type: string
+        description: What is the feature tag? (i.e. abc123)
         required: true
+        type: string
+
   delete:
     # This runs on deletion of branches & tags. If a tag is deleted,
     # the workflow will run, but all jobs after env-vars will be skipped.

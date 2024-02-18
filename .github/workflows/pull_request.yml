@@ -9,12 +9,14 @@ on:
         description: Custom Feature Tag. Will use Jira story number from branch name if empty.
         required: false
         type: string
+
   pull_request:
     types:
       - opened
       - reopened
       - synchronize
       - ready_for_review
+  
     paths-ignore:
       - '**/README.md'
       - '**/.gitignore'

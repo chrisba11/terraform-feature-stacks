@@ -4,6 +4,7 @@ run-name: Terraform Plan - Dev, Test, Prod
 
 on:
   workflow_dispatch:
+
   pull_request:
     types:
       - opened

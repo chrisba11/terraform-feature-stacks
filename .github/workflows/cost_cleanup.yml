@@ -2,24 +2,28 @@
 
 name: Terraform Cleanup - Cost Savings
 
-run-name: Terraform Cleanup - Cost Savings (Dev, Test, Prod)
+run-name: Terraform Cleanup - Cost Savings (${{ inputs.environments }})
 
 on:
   workflow_dispatch:
     inputs:
+      environments:
+        description: Comma-separated list of environments to run against.
+        required: true
+        type: string
+        default: dev,test,prod
+
       resource_targets:
         description: Comma-separated list of resources to target for destruction (optional). If omitted, all resources in the selected stack will be destroyed.
         required: false
         type: string
-      stack_name:
-        description: Name of Terraform stack.
+
+      stack_names:
+        description: Comma-separated list of of Terraform stack names to run against.
         required: true
-        type: choice
-        options:
-          - api
-          - oidc
-          - vpc
+        type: string
         default: vpc
+
   # schedule:
   #   - cron: '0 0 * * *'  # This represents daily at 5 PM PST
 
@@ -37,20 +41,50 @@ jobs:
     name: Set Env Vars as Outputs
     runs-on: ubuntu-latest
     outputs:
-      RESOURCE_TARGETS: ${{ github.event_name == 'workflow_dispatch' && steps.manual-targets.outputs.resource_targets || steps.scheduled-targets.outputs.resource_targets }}
+      MATRIX: ${{ steps.set-outputs.outputs.matrix }}
+      RESOURCE_TARGETS: ${{ steps.set-outputs.outputs.resource_targets }}
     steps:
-      - name: Set Targets for Manual Trigger
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        id: manual-targets
+      - name: Set Output Values
+        id: set-outputs
         run: |
-          echo "resource_targets=${{ github.event.inputs.resource_targets }}" >> $GITHUB_ENV
 
-      - name: Set Targets for Scheduled Run
-        if: ${{ github.event_name == 'schedule' }}
-        id: scheduled-targets
-        run: |
-          # Grab preset target values from environment variable
-          echo "resource_targets=$VPC_TARGETS" >> $GITHUB_ENV
+          ENVS="${{ github.event.inputs.environments }}"
+          STACKS="${{ github.event.inputs.stack_names }}"
+          MATRIX="["
+
+          # Split environments and stack names into arrays
+          IFS=',' read -ra ENV_ARRAY <<< "$ENVS"
+          IFS=',' read -ra STACK_ARRAY <<< "$STACKS"
+
+          # Iterate through every combination of environment and stack name
+          for ENV in "${ENV_ARRAY[@]}"; do
+            for STACK in "${STACK_ARRAY[@]}"; do
+              # Logic to match environment to account ID (adjust as needed)
+              if [[ $ENV == "dev" ]]; then
+                ACCOUNT_ID_VAR="DEV_ACCOUNT_ID"
+              elif [[ $ENV == "test" ]]; then
+                ACCOUNT_ID_VAR="TEST_ACCOUNT_ID"
+              elif [[ $ENV == "prod" ]]; then
+                ACCOUNT_ID_VAR="PROD_ACCOUNT_ID"
+              fi
+              # Construct JSON object for matrix
+              MATRIX="${MATRIX}{\"environment\": \"${ENV}\", \"account_id\": \${{ secrets.${ACCOUNT_ID_VAR} }}, \"stack_name\": \"${STACK}\"},"
+            done
+          done
+          MATRIX="${MATRIX%,}]"
+
+          echo "MATRIX = $MATRIX"
+
+          # set resource targets value based on event triggering workflow
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            RESOURCE_TARGETS="${{ github.event.inputs.resource_targets }}"
+          elif [[ "${{ github.event_name }}" == "schedule" ]]; then
+            RESOURCE_TARGETS="${VPC_TARGETS}"
+          fi
+
+          echo "matrix=$MATRIX" >> $GITHUB_ENV
+          echo "resource_targets=${RESOURCE_TARGETS}" >> $GITHUB_ENV
+
 
 
   tf-destroy:
@@ -59,13 +93,7 @@ jobs:
       - env-vars
     strategy:
       fail-fast: false
-      matrix:
-        stack_name:
-          - vpc
-        environment:
-          - [dev, '${{ vars.DEV_ACCOUNT_ID }}']
-          - [test, '${{ vars.TEST_ACCOUNT_ID }}']
-          - [prod, '${{ vars.PROD_ACCOUNT_ID }}']
+      matrix: ${{fromJson(needs.env-vars.outputs.matrix)}}
     uses: chrisba11/terraform-feature-stacks/.github/workflows/rw_tf_destroy.yml@main
     with:
       aws_account_id: ${{ matrix.environment[1] }}

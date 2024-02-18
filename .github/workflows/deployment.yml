@@ -14,9 +14,11 @@ on:
           - dev
           - test
           - prod
+  
   push:
     branches:
       - main
+  
     paths-ignore:
       - '**/README.md'
       - '**/.gitignore'
