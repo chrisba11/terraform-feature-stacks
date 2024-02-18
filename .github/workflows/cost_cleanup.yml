@@ -68,8 +68,8 @@ jobs:
                 ACCOUNT_ID_VAR="PROD_ACCOUNT_ID"
               fi
               # Construct JSON object for matrix
-              MATRIX="${MATRIX}{\"environment\": \"${ENV}\", \"account_id\": \${{ secrets.${ACCOUNT_ID_VAR} }}, \"stack_name\": \"${STACK}\"},"
-            done
+              MATRIX="${MATRIX}{\"environment\": [\"${ENV}\", \"${ACCOUNT_ID}\"], \"stack_name\": \"${STACK}\"},"
+            done            done
           done
           MATRIX="${MATRIX%,}]"
 
@@ -84,7 +84,6 @@ jobs:
 
           echo "matrix=$MATRIX" >> $GITHUB_ENV
           echo "resource_targets=${RESOURCE_TARGETS}" >> $GITHUB_ENV
-
 
 
   tf-destroy:
