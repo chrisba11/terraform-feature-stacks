@@ -50,7 +50,7 @@ jobs:
 
           ENVS="${{ github.event.inputs.environments }}"
           STACKS="${{ github.event.inputs.stack_names }}"
-          MATRIX="{\"include\": ["
+          MATRIX="{\"include\":["
 
           # Split environments and stack names into arrays
           IFS=',' read -ra ENV_ARRAY <<< "$ENVS"
@@ -68,7 +68,7 @@ jobs:
                 ACCOUNT_ID="${{ vars.PROD_ACCOUNT_ID }}"
               fi
               # Construct JSON object for matrix
-              MATRIX="${MATRIX}{\"environment\": [\"${ENV}\", \"${ACCOUNT_ID}\"], \"stack_name\": \"${STACK}\"},"
+              MATRIX="${MATRIX}{\"environment\":[\"${ENV}\", \"${ACCOUNT_ID}\"], \"stack_name\":\"${STACK}\"},"
             done
           done
           MATRIX="${MATRIX%,}]}"
