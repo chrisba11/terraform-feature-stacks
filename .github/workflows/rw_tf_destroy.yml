@@ -77,7 +77,7 @@ jobs:
           role-to-assume: arn:aws:iam::${{ inputs.aws_account_id }}:role/${{ inputs.role_name }}
           aws-region: ${{ inputs.aws_region }}
           role-duration-seconds: 3600
-          role-session-name: ${{ github.event.repository.name }}
+          role-session-name: ${{ github.event.repository.name }}-${{ github.actor }}-${{ github.triggering_actor }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
