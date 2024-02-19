@@ -50,11 +50,26 @@ jobs:
 
           ENVS="${{ github.event.inputs.environments }}"
           STACKS="${{ github.event.inputs.stack_names }}"
-          MATRIX="{\"include\":["
+
+          # set resource targets value based on event triggering workflow
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            # for manual runs, grab list from input
+            RESOURCE_TARGETS="${{ github.event.inputs.resource_targets }}"
+          elif [[ "${{ github.event_name }}" == "schedule" ]]; then
+            # for scheduled runs, use predefined lists
+            RESOURCE_TARGETS="${VPC_TARGETS}"
+          fi
+
+          # Remove any spaces
+          ENVS="${ENVS// /}"
+          RESOURCE_TARGETS="${RESOURCE_TARGETS// /}"
+          STACKS="${STACKS// /}"
 
           # Split environments and stack names into arrays
           IFS=',' read -ra ENV_ARRAY <<< "$ENVS"
           IFS=',' read -ra STACK_ARRAY <<< "$STACKS"
+
+          MATRIX="{\"include\":["
 
           # Iterate through every combination of environment and stack name
           for ENV in "${ENV_ARRAY[@]}"; do
@@ -68,19 +83,12 @@ jobs:
                 ACCOUNT_ID="${{ vars.PROD_ACCOUNT_ID }}"
               fi
               # Construct JSON object for matrix
-              MATRIX="${MATRIX}{\"environment\":[\"${ENV}\", \"${ACCOUNT_ID}\"], \"stack_name\":\"${STACK}\"},"
+              MATRIX="${MATRIX}{\"environment\":[\"${ENV}\",\"${ACCOUNT_ID}\"],\"stack_name\":\"${STACK}\"},"
             done
           done
           MATRIX="${MATRIX%,}]}"
 
           echo "MATRIX = $MATRIX"
-
-          # set resource targets value based on event triggering workflow
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            RESOURCE_TARGETS="${{ github.event.inputs.resource_targets }}"
-          elif [[ "${{ github.event_name }}" == "schedule" ]]; then
-            RESOURCE_TARGETS="${VPC_TARGETS}"
-          fi
 
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
           echo "resource_targets=${RESOURCE_TARGETS}" >> $GITHUB_OUTPUT
