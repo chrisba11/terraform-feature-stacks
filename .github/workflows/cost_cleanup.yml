@@ -99,7 +99,7 @@ jobs:
       aws_region: ${{ vars.AWS_REGION }}
       environment: ${{ matrix.environment[0] }}
       resource_targets: ${{ needs.env-vars.outputs.RESOURCE_TARGETS }}
-      role_name: GithubActionsRole-ReadOnly
+      role_name: GithubActionsRole-Write
       terraform_version: =1.7.0
       tf_backend_name: ${{ vars.TF_BACKEND_PREFIX }}-${{ matrix.environment[0] }}
       tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.stack_name }}
