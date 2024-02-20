@@ -161,7 +161,9 @@ data "aws_iam_policy_document" "permissions_write" {
       "s3:PutObject",
       "s3:PutObjectAcl",
       "s3:PutObjectRetention",
+      "s3:PutObjectTagging",
       "s3:PutObjectVersionAcl",
+      "s3:PutObjectVersionTagging",
     ]
     resources = ["*"]
   }
