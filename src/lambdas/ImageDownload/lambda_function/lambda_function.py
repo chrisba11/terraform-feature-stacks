@@ -34,7 +34,7 @@ def lambda_handler(event, context):
         logger.warn('Logger: WARNING logs will be displayed.')
         logger.error('Logger: ERROR logs will be displayed.')
 
-        logger.info('Event object:' + json.dumps(event))
+        logger.debug('Event object:' + json.dumps(event))
 
         try:
             # get StatusCode from event object's body if exists, otherwise use 200
