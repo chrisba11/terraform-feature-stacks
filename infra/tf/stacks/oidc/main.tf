@@ -165,6 +165,15 @@ data "aws_iam_policy_document" "permissions_write" {
     resources = ["*"]
   }
 
+  statement {
+    sid    = "TempS3Permissions"
+    effect = "Allow"
+    actions = [
+      "s3:*",
+    ]
+    resources = ["arn:aws:s3:::chrisba11-example-lambda-packages-dev/*"]
+  }
+
   # Conditionally add Delete permissions for nonprod environments
   dynamic "statement" {
     for_each = var.environment != "prod" ? [1] : []

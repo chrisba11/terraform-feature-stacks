@@ -54,7 +54,7 @@ fi
 ##################
 
 # Run the update_tf_docs script
-./scripts/update_tf_docs.sh
+./scripts/update-tf-docs.sh
 
 # Check for modified files
 MODIFIED_FILES=$(git status --porcelain | grep -E "^ M" | awk '{print $2}')
