@@ -78,6 +78,9 @@ data "aws_iam_policy_document" "permissions_readonly" {
       "s3:GetLifecycleConfiguration",
       "s3:GetObject",
       "s3:GetObjectTagging",
+      "s3:GetObjectVersion",
+      "s3:GetObjectVersionAttributes",
+      "s3:GetObjectVersionTagging",
       "s3:GetReplicationConfiguration",
       "s3:ListBucket",
       "s3:ListBucketMultipartUploads",
@@ -167,15 +170,6 @@ data "aws_iam_policy_document" "permissions_write" {
     ]
     resources = ["*"]
   }
-
-  # statement {
-  #   sid    = "TempS3Permissions"
-  #   effect = "Allow"
-  #   actions = [
-  #     "s3:*",
-  #   ]
-  #   resources = ["arn:aws:s3:::chrisba11-example-lambda-packages-dev/*"]
-  # }
 
   # Conditionally add Delete permissions for nonprod environments
   dynamic "statement" {
