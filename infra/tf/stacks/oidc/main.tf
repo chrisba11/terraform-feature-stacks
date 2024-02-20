@@ -157,6 +157,8 @@ data "aws_iam_policy_document" "permissions_write" {
       "s3:PutEncryptionConfiguration",
       "s3:PutLifecycleConfiguration",
       "s3:PutObject",
+      "s3:PutObjectAcl",
+      "s3:PutObjectVersionAcl",
     ]
     resources = ["*"]
   }
