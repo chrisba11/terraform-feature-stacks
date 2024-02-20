@@ -135,6 +135,8 @@ data "aws_iam_policy_document" "permissions_write" {
       "iam:UntagRole",
       "iam:UpdateRole",
       "iam:UpdateRoleDescription",
+      "kms:Decrypt",
+      "kms:GenerateDataKey",
       "lambda:AddPermission",
       "lambda:CreateFunction",
       "lambda:InvokeFunction",
