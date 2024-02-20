@@ -165,14 +165,14 @@ data "aws_iam_policy_document" "permissions_write" {
     resources = ["*"]
   }
 
-  statement {
-    sid    = "TempS3Permissions"
-    effect = "Allow"
-    actions = [
-      "s3:*",
-    ]
-    resources = ["arn:aws:s3:::chrisba11-example-lambda-packages-dev/*"]
-  }
+  # statement {
+  #   sid    = "TempS3Permissions"
+  #   effect = "Allow"
+  #   actions = [
+  #     "s3:*",
+  #   ]
+  #   resources = ["arn:aws:s3:::chrisba11-example-lambda-packages-dev/*"]
+  # }
 
   # Conditionally add Delete permissions for nonprod environments
   dynamic "statement" {
@@ -199,6 +199,7 @@ data "aws_iam_policy_document" "permissions_write" {
         "s3:DeleteBucketWebsite",
         "s3:DeleteObject",
         "s3:DeleteObjectVersion",
+        "s3:DeleteObjectVersionTagging",
       ]
       resources = ["*"]
     }
