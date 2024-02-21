@@ -77,6 +77,23 @@ jobs:
           echo "tf_version=${TF_VERSION}" >> $GITHUB_OUTPUT
 
 
+  build:
+    name: Build Lambda Package
+    # using the matrix strategy here because the 'env' context is not available
+    # this gives us the ability to define the lambda name once and use many times in the inputs
+    strategy:
+      fail-fast: false
+      matrix:
+        lambda_name:
+          - ImageDownload
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__build_python_lambda.yml@main
+    with:
+      aws_region: ${{ vars.AWS_REGION }}
+      lambda_name: ${{ matrix.lambda_name }}
+      python_version: 3.11
+      src_directory: src/lambdas/${{ matrix.lambda_name }}
+
+
   tf-plan:
     name: Terraform Plan
     needs:
