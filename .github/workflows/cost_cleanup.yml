@@ -25,7 +25,7 @@ on:
         default: vpc
 
   # schedule:
-  #   - cron: '0 0 * * *'  # This represents daily at 5 PM PST
+  #   - cron: '0 0 * * *'  # Daily at 5 PM PST
 
 permissions:
   contents: read
