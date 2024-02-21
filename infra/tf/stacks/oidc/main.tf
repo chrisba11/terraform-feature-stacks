@@ -84,6 +84,7 @@ data "aws_iam_policy_document" "permissions_readonly" {
       "s3:GetReplicationConfiguration",
       "s3:ListBucket",
       "s3:ListBucketMultipartUploads",
+      "s3:ListBucketVersions",
       "s3:ListMultipartUploadParts",
     ]
     resources = ["*"]
