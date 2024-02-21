@@ -49,7 +49,7 @@ jobs:
             FEATURE_TAG="${{ github.event.inputs.feature_tag }}"
           else
             # get feature tag from branch name workflow is running against
-            FEATURE_TAG="$(./ci-scripts/create-feature-tag.sh ${{ github.event.ref }})"
+            FEATURE_TAG="$(./scripts/create-feature-tag.sh ${{ github.event.ref }})"
 
             # set CONTINUE to false if not a branch deletion
             if [[ "${{ github.event.ref_type }}" == "tag" ]]; then
