@@ -60,7 +60,7 @@ data "aws_iam_policy_document" "image_lambda" {
 
 resource "aws_s3_object" "image_lambda_package" {
   bucket      = local.lambda_package_bucket_name
-  key         = "${local.lambda_package_key_prefix}/${local.image_lambda_name}.zip"
+  key         = "${local.lambda_package_key_prefix}${local.image_lambda_name}.zip"
   source      = "./artifacts/${local.image_lambda_name}.zip/${local.image_lambda_name}.zip"
   source_hash = filemd5("./artifacts/${local.image_lambda_name}.zip/${local.image_lambda_name}.zip")
 }
