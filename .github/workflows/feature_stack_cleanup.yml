@@ -88,7 +88,6 @@ jobs:
       environment: dev
       feature_tag: ${{ needs.env-vars.outputs.FEATURE_TAG }}
       role_name: GithubActionsRole-Write
-      stack_name: ${{ matrix.stack_name }}
       terraform_version: ${{ needs.env-vars.outputs.TF_VERSION }}
       tf_backend_name: ${{ vars.TF_BACKEND_PREFIX }}-dev
       tf_backend_key: ${{ github.event.repository.name }}/feature/${{ matrix.stack_name }}_${{ needs.env-vars.outputs.FEATURE_TAG }}
