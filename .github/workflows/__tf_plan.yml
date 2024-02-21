@@ -160,13 +160,6 @@ jobs:
             FEATURE_TAG_ARG=""
           fi
 
-          # set lambda_zip_directory arg if supplied via input
-          if [[ -n "${{ inputs.lambda_artifact_path }}" ]]; then
-            LAMBDA_PACKAGE_ARG="-var=lambda_zip_directory=${{ inputs.lambda_artifact_path }}"
-          else
-            LAMBDA_PACKAGE_ARG=""
-          fi
-
           # allow non-zero exit code without failure
           set +e
 
@@ -174,7 +167,6 @@ jobs:
             -var="aws_account_id=${{ inputs.aws_account_id }}" \
             -var="repository=$GITHUB_REPOSITORY" \
             $FEATURE_TAG_ARG \
-            $LAMBDA_PACKAGE_ARG \
             $TFVARS_PATH_ARG \
             -out="${{ env.BUILD_VERSION }}-${{ env.ARTIFACT_NAME }}"
 
