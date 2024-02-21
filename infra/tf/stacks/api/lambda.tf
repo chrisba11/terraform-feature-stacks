@@ -10,12 +10,12 @@ module "image_lambda" {
   permission_policy_json = data.aws_iam_policy_document.image_lambda.json
 
   lambda_package_bucket_name    = local.lambda_package_bucket_name
-  lambda_package_object_key     = "${local.lambda_package_key_prefix}${local.image_lambda_name}.zip"
+  lambda_package_object_key     = aws_s3_object.image_lambda_package.key
   lambda_package_object_version = aws_s3_object.image_lambda_package.version_id
 
   api_gateway_execution_arn = "${local.apigw_arn_prefix}/*/${aws_api_gateway_method.image.http_method}/${aws_api_gateway_resource.image.path_part}"
 
-  application_log_level = local.application_log_level[var.python_log_level]
+  application_log_level = local.application_log_level_map[var.python_log_level]
   system_log_level      = var.lambda_system_log_level
 
   environment_variables = {
@@ -59,7 +59,7 @@ data "aws_iam_policy_document" "image_lambda" {
 }
 
 resource "aws_s3_object" "image_lambda_package" {
-  bucket      = aws_s3_bucket.lambda_package.0.bucket
+  bucket      = local.lambda_package_bucket_name
   key         = "${local.lambda_package_key_prefix}/${local.image_lambda_name}.zip"
   source      = "./artifacts/${local.image_lambda_name}.zip/${local.image_lambda_name}.zip"
   source_hash = filemd5("./artifacts/${local.image_lambda_name}.zip/${local.image_lambda_name}.zip")

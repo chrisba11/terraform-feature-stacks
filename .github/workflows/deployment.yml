@@ -14,11 +14,11 @@ on:
           - dev
           - test
           - prod
-  
+
   push:
     branches:
       - main
-  
+
     paths-ignore:
       - '**/README.md'
       - '**/.gitignore'
@@ -175,10 +175,6 @@ jobs:
 
   build:
     name: Build Lambda Package
-    needs:
-      - env-vars
-      - tf-apply-oidc
-      # - tf-apply-vpc
     # using the matrix strategy here because the 'env' context is not available
     # this gives us the ability to define the lambda name once and use many times in the inputs
     strategy:

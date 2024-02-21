@@ -1,6 +1,6 @@
 name: Terraform Plan
 
-run-name: Terraform Plan - Dev, Test, Prod
+run-name: Terraform Plan
 
 on:
   workflow_dispatch:
@@ -22,8 +22,27 @@ permissions:
 
 
 jobs:
+  build:
+    name: Build Lambda Package
+    # using the matrix strategy here because the 'env' context is not available
+    # this gives us the ability to define the lambda name once and use many times in the inputs
+    strategy:
+      fail-fast: false
+      matrix:
+        lambda_name:
+          - ImageDownload
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__build_python_lambda.yml@main
+    with:
+      aws_region: ${{ vars.AWS_REGION }}
+      lambda_name: ${{ matrix.lambda_name }}
+      python_version: 3.11
+      src_directory: src/lambdas/${{ matrix.lambda_name }}
+
+
   tf-plan:
     name: Terraform Plan
+    needs: 
+      - build
     strategy:
       fail-fast: false
       matrix:
@@ -33,8 +52,8 @@ jobs:
           - vpc
         environment:
           - [dev, '${{ vars.DEV_ACCOUNT_ID }}']
-          - [test, '${{ vars.TEST_ACCOUNT_ID }}']
-          - [prod, '${{ vars.PROD_ACCOUNT_ID }}']
+          # - [test, '${{ vars.TEST_ACCOUNT_ID }}']
+          # - [prod, '${{ vars.PROD_ACCOUNT_ID }}']
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_plan.yml@main
     with:
       aws_account_id: ${{ matrix.environment[1] }}
