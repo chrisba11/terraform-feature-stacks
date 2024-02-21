@@ -70,12 +70,6 @@ on:
         required: true
         type: string
 
-env:
-  # Using the actor and triggering actor will allow us to see who initially triggered the workflow
-  # and who triggered a re-run. If the same user triggered the initial run and the re-run, the 
-  # username will show twice.
-  ROLE_SESSION_NAME: ${{ github.event.repository.name }}+run=${{ github.run_id }}-${{ github.run_number }}+${{ github.triggering_actor }}
-
 
 jobs:
   tf-destroy:
@@ -96,7 +90,6 @@ jobs:
           aws-region: ${{ inputs.aws_region }}
           role-duration-seconds: ${{ inputs.role_session_duration }}
           role-session-name: ${{ inputs.role_session_name }}
-          # role-session-name: ${{ env.ROLE_SESSION_NAME }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2

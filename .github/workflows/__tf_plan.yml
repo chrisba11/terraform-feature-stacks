@@ -79,10 +79,6 @@ env:
   ARTIFACT_NAME: ${{ inputs.feature_tag != '' && inputs.feature_tag || inputs.environment }}-${{ inputs.stack_name }}.tfplan
   # latest commit on branch triggering workflow (helps avoid using merge commit)
   COMMIT_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
-  # Using the actor and triggering actor will allow us to see who initially triggered the workflow
-  # and who triggered a re-run. If the same user triggered the initial run and the re-run, the 
-  # username will show twice.
-  ROLE_SESSION_NAME: ${{ github.event.repository.name }}+run=${{ github.run_id }}-${{ github.run_number }}+${{ github.triggering_actor }}
 
 
 jobs:
@@ -115,7 +111,6 @@ jobs:
           aws-region: ${{ inputs.aws_region }}
           role-duration-seconds: ${{ inputs.role_session_duration }}
           role-session-name: ${{ inputs.role_session_name }}
-          # role-session-name: ${{ env.ROLE_SESSION_NAME }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
