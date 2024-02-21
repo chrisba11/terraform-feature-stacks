@@ -98,6 +98,7 @@ jobs:
     name: Terraform Plan
     needs:
       - env-vars
+      - build
     # using the matrix strategy here because the 'env' context is not available
     # this gives us the ability to define the stack name once and use many times in the inputs
     strategy:
