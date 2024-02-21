@@ -63,11 +63,11 @@ jobs:
             else
               # if a 'feature_tag' input value is not provided,
               # get feature tag from branch name the workflow is running against
-              FEATURE_TAG=$(./ci-scripts/create-feature-tag.sh ${GITHUB_REF#refs/heads/})
+              FEATURE_TAG=$(./scripts/create-feature-tag.sh ${GITHUB_REF#refs/heads/})
             fi
           else
             # create feature tag from pull request head branch name
-            FEATURE_TAG=$(./ci-scripts/create-feature-tag.sh $GITHUB_HEAD_REF)
+            FEATURE_TAG=$(./scripts/create-feature-tag.sh $GITHUB_HEAD_REF)
           fi
 
           # sets feature tag output
@@ -88,7 +88,7 @@ jobs:
       matrix:
         stack_name:
           - api
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/rw_tf_plan.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_plan.yml@main
     with:
       aws_account_id: ${{ vars.DEV_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
@@ -115,7 +115,7 @@ jobs:
       matrix:
         stack_name:
           - api
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/rw_tf_apply.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply.yml@main
     with:
       aws_account_id: ${{ vars.DEV_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
