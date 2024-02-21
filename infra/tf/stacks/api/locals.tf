@@ -6,7 +6,7 @@ locals {
     SCM_Repo    = split("/", var.repository)[1]
   }
 
-  application_log_level = {
+  application_log_level_map = {
     DEBUG    = "DEBUG"
     INFO     = "INFO"
     WARNING  = "WARN"
