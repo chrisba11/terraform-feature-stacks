@@ -33,6 +33,18 @@ on:
         required: true
         type: string
 
+      role_session_duration:
+        description: Length of time in seconds assumed role token will be valid
+        required: false
+        type: number
+        default: 3600
+
+      role_session_name:
+        description: Name of IAM Role session. Defaults to '[repo name]+run=[run id]-[run number]+[triggering actor]'.
+        required: false
+        type: string
+        default: ${{ github.event.repository.name }}+run=${{ github.run_id }}-${{ github.run_number }}+${{ github.triggering_actor }}
+
       terraform_version:
         description: Version of Terraform to use in workflow
         required: true
@@ -82,8 +94,9 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::${{ inputs.aws_account_id }}:role/${{ inputs.role_name }}
           aws-region: ${{ inputs.aws_region }}
-          role-duration-seconds: 3600
-          role-session-name: ${{ env.ROLE_SESSION_NAME }}
+          role-duration-seconds: ${{ inputs.role_session_duration }}
+          role-session-name: ${{ inputs.role_session_name }}
+          # role-session-name: ${{ env.ROLE_SESSION_NAME }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
