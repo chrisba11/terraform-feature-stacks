@@ -70,7 +70,7 @@ env:
   # Using the actor and triggering actor will allow us to see who initially triggered the workflow
   # and who triggered a re-run. If the same user triggered the initial run and the re-run, the 
   # username will show twice.
-  ROLE_SESSION_NAME: ${{ github.event.repository.name }}+$GITHUB_WORKFLOW+${{ github.actor }}+${{ github.triggering_actor }}
+  ROLE_SESSION_NAME: ${{ github.event.repository.name }}+run:$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT+actor:${{ github.actor }}+triggered:${{ github.triggering_actor }}
 
 
 jobs:
