@@ -1,0 +1,64 @@
+name: Delete S3 Object
+
+on:
+  workflow_call:
+    inputs:
+      aws_account_id:
+        description: ID of the AWS Account where S3 object is located.
+        required: true
+        type: string
+
+      aws_region:
+        description: AWS region where the S3 bucket is located.
+        required: true
+        type: string
+
+      object_key:
+        description: Key of the S3 object to delete.
+        required: true
+        type: string
+
+      role_name:
+        description: Name of IAM Role to assume.
+        required: true
+        type: string
+
+      role_session_duration:
+        description: Length of time in seconds assumed role token will be valid.
+        required: false
+        type: number
+        default: 900
+
+      role_session_name:
+        description: Name of IAM Role session. Defaults to '[repo name]+run=[run id]-[run number]+[triggering actor]'.
+        required: false
+        type: string
+        default: ${{ github.event.repository.name }}+run=${{ github.run_id }}-${{ github.run_number }}+${{ github.triggering_actor }}
+
+      s3_bucket_name:
+        description: Name of the S3 bucket where object is located.
+        required: true
+        type: string
+
+env:
+  AWS_DEFAULT_REGION: ${{ inputs.aws_region }}
+
+
+jobs:
+  delete-object:
+    name: Delete S3 Object
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ inputs.aws_region }}
+          role-to-assume: arn:aws:iam::${{ inputs.aws_account_id }}:role/${{ inputs.role_name }}
+          role-duration-seconds: ${{ inputs.role_session_duration }}
+          role-session-name: ${{ inputs.role_session_name }}
+
+      - name: Delete Object
+        run: |
+          aws s3api delete-object \
+            --bucket ${{ inputs.s3_bucket_name }} \
+            --key "${{ inputs.object_key }}"

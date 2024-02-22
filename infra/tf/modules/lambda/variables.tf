@@ -63,11 +63,6 @@ variable "lambda_package_object_key" {
   type        = string
 }
 
-variable "lambda_package_object_version" {
-  description = "Version of the object in the S3 Bucket. Changes trigger re-deploy of lambda."
-  type        = string
-}
-
 variable "permission_policy_arn_list" {
   description = "List of ARNs for existing permission policies to attach to the Lambda. Required if `permission_policy_json` is not provided."
   type        = list(string)

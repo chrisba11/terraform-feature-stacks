@@ -102,7 +102,7 @@ jobs:
           terraform init \
             -backend-config="bucket=${{ inputs.tf_backend_name }}" \
             -backend-config="dynamodb_table=${{ inputs.tf_backend_name }}" \
-            -backend-config="key=${{ inputs.tf_backend_key }}.tfstate"
+            -backend-config="key=${{ inputs.tf_backend_key }}"
 
       - name: Terraform Destroy
         working-directory: ${{ inputs.working_directory }}

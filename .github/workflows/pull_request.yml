@@ -16,7 +16,7 @@ on:
       - reopened
       - synchronize
       - ready_for_review
-  
+
     paths-ignore:
       - '**/README.md'
       - '**/.gitignore'
@@ -28,6 +28,7 @@ permissions:
 
 env:
   COMMIT_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+  LAMBDA_PACKAGE_BUCKET: chrisba11-example-lambda-packages # excludes env suffix
   TF_VERSION: =1.7.0
 
 
@@ -86,14 +87,35 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        lambda_name:
+        LAMBDA_NAME:
           - ImageDownload
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/__build_python_lambda.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__build_python_lambda.yml@v1
     with:
       aws_region: ${{ vars.AWS_REGION }}
-      lambda_name: ${{ matrix.lambda_name }}_${{ needs.env-vars.outputs.FEATURE_TAG }}
+      lambda_name: ${{ matrix.LAMBDA_NAME }}_${{ needs.env-vars.outputs.FEATURE_TAG }}
       python_version: 3.11
-      src_directory: src/lambdas/${{ matrix.lambda_name }}
+      src_directory: src/lambdas/${{ matrix.LAMBDA_NAME }}
+
+
+  deploy:
+    name: Deploy Lambda Package
+    needs:
+      - env-vars
+      - build
+    strategy:
+      fail-fast: false
+      matrix:
+        LAMBDA_NAME:
+          - ImageDownload
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__upload_s3_object.yml@v1
+    with:
+      aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
+      aws_region: ${{ vars.AWS_REGION }}
+      bucket_name: edvise-lambda-packages-${{ needs.env-vars.outputs.ENVIRONMENT }}
+      environment: ${{ needs.env-vars.outputs.ENVIRONMENT }}
+      object_key: ${{ github.event.repository.name }}/feature/${{ matrix.LAMBDA_NAME }}_${{ needs.env-vars.outputs.FEATURE_TAG }}.zip
+      object_name: ${{ matrix.LAMBDA_NAME }}_${{ needs.env-vars.outputs.FEATURE_TAG }}.zip
+      role_name: GithubActionsRole-Write
 
 
   tf-plan:
@@ -106,21 +128,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        stack_name:
+        STACK_NAME:
           - api
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_plan.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_plan.yml@v1
     with:
       aws_account_id: ${{ vars.DEV_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
       environment: dev
       feature_tag: ${{ needs.env-vars.outputs.FEATURE_TAG }}
       role_name: GithubActionsRole-ReadOnly
-      stack_name: ${{ matrix.stack_name }}
+      stack_name: ${{ matrix.STACK_NAME }}
       terraform_version: ${{ needs.env-vars.outputs.TF_VERSION }}
       tf_backend_name: ${{ vars.TF_BACKEND_PREFIX }}-dev
-      tf_backend_key: ${{ github.event.repository.name }}/feature/${{ matrix.stack_name }}_${{ needs.env-vars.outputs.FEATURE_TAG }}
+      tf_backend_key: ${{ github.event.repository.name }}/feature/${{ matrix.STACK_NAME }}_${{ needs.env-vars.outputs.FEATURE_TAG }}.tfstate
       tfvars_path: ./environments/dev.tfvars
-      working_directory: infra/tf/stacks/${{ matrix.stack_name }}
+      working_directory: infra/tf/stacks/${{ matrix.STACK_NAME }}
 
 
   tf-apply:
@@ -133,20 +155,43 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        stack_name:
+        STACK_NAME:
           - api
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply.yml@v1
     with:
       aws_account_id: ${{ vars.DEV_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
       environment: dev
       feature_tag: ${{ needs.env-vars.outputs.FEATURE_TAG }}
       role_name: GithubActionsRole-Write
-      stack_name: ${{ matrix.stack_name }}
+      stack_name: ${{ matrix.STACK_NAME }}
       terraform_version: ${{ needs.env-vars.outputs.TF_VERSION }}
       tf_backend_name: ${{ vars.TF_BACKEND_PREFIX }}-dev
-      tf_backend_key: ${{ github.event.repository.name }}/feature/${{ matrix.stack_name }}_${{ needs.env-vars.outputs.FEATURE_TAG }}
-      working_directory: infra/tf/stacks/${{ matrix.stack_name }}
+      tf_backend_key: ${{ github.event.repository.name }}/feature/${{ matrix.STACK_NAME }}_${{ needs.env-vars.outputs.FEATURE_TAG }}.tfstate
+      working_directory: infra/tf/stacks/${{ matrix.STACK_NAME }}
+
+
+  update:
+    name: Update Lambda
+    runs-on: ubuntu-latest
+    needs: 
+      - env-vars
+      - deploy
+      - tf-apply
+    strategy:
+      fail-fast: false
+      matrix:
+        LAMBDA_NAME:
+          - ImageDownload
+    steps:
+      - name: Update Lambda Function Code
+        run: |
+
+          # triggers lambda function to use new updated zip archive
+          aws lambda update-function-code \
+            --function-name ${{ matrix.LAMBDA_NAME }}_${{ needs.env-vars.outputs.FEATURE_TAG }} \
+            --s3-bucket ${{ env.LAMBDA_PACKAGE_BUCKET }}-${{ needs.env-vars.outputs.ENVIRONMENT }} \
+            --s3-key feature/${{ matrix.LAMBDA_NAME }}_${{ needs.env-vars.outputs.FEATURE_TAG }}.zip
 
 
   create-feature-git-tag:
@@ -155,6 +200,7 @@ jobs:
     needs:
       - env-vars
       - tf-apply
+      - update
     concurrency:
       group: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}-tag
       cancel-in-progress: true

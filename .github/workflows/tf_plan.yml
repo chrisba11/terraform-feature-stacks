@@ -22,23 +22,6 @@ permissions:
 
 
 jobs:
-  build:
-    name: Build Lambda Package
-    # using the matrix strategy here because the 'env' context is not available
-    # this gives us the ability to define the lambda name once and use many times in the inputs
-    strategy:
-      fail-fast: false
-      matrix:
-        lambda_name:
-          - ImageDownload
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/__build_python_lambda.yml@main
-    with:
-      aws_region: ${{ vars.AWS_REGION }}
-      lambda_name: ${{ matrix.lambda_name }}
-      python_version: 3.11
-      src_directory: src/lambdas/${{ matrix.lambda_name }}
-
-
   tf-plan:
     name: Terraform Plan
     needs: 
@@ -46,23 +29,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        stack_name:
+        STACK_NAME:
           - api
           - oidc
+          - storage
           - vpc
-        environment:
+        ENVIRONMENT:
           - [dev, '${{ vars.DEV_ACCOUNT_ID }}']
           # - [test, '${{ vars.TEST_ACCOUNT_ID }}']
           # - [prod, '${{ vars.PROD_ACCOUNT_ID }}']
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_plan.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_plan.yml@v1
     with:
-      aws_account_id: ${{ matrix.environment[1] }}
+      aws_account_id: ${{ matrix.ENVIRONMENT[1] }}
       aws_region: ${{ vars.AWS_REGION }}
-      environment: ${{ matrix.environment[0] }}
+      environment: ${{ matrix.ENVIRONMENT[0] }}
       role_name: GithubActionsRole-ReadOnly
-      stack_name: ${{ matrix.stack_name }}
+      stack_name: ${{ matrix.STACK_NAME }}
       terraform_version: =1.7.0
-      tf_backend_name: ${{ vars.TF_BACKEND_PREFIX }}-${{ matrix.environment[0] }}
-      tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.stack_name }}
-      tfvars_path: ./environments/${{ matrix.environment[0] }}.tfvars
-      working_directory: infra/tf/stacks/${{ matrix.stack_name }}
+      tf_backend_name: ${{ vars.TF_BACKEND_PREFIX }}-${{ matrix.ENVIRONMENT[0] }}
+      tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.STACK_NAME }}.tfstate
+      tfvars_path: ./environments/${{ matrix.ENVIRONMENT[0] }}.tfvars
+      working_directory: infra/tf/stacks/${{ matrix.STACK_NAME }}
