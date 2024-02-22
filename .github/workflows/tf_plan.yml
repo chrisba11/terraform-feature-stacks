@@ -24,8 +24,6 @@ permissions:
 jobs:
   tf-plan:
     name: Terraform Plan
-    needs: 
-      - build
     strategy:
       fail-fast: false
       matrix:
