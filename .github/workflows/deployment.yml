@@ -203,7 +203,7 @@ jobs:
     with:
       aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
-      bucket_name: edvise-lambda-packages-${{ needs.env-vars.outputs.ENVIRONMENT }}
+      bucket_name: ${{ env.LAMBDA_PACKAGE_BUCKET }}-${{ needs.env-vars.outputs.ENVIRONMENT }}
       environment: ${{ needs.env-vars.outputs.ENVIRONMENT }}
       object_key: ${{ github.event.repository.name }}/${{ matrix.LAMBDA_NAME }}.zip
       object_name: ${{ matrix.LAMBDA_NAME }}.zip
