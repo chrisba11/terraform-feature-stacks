@@ -30,7 +30,6 @@ permissions:
 
 env:
   DEFAULT_ENV: dev
-  LAMBDA_PACKAGE_BUCKET: chrisba11-example-lambda-packages # excludes env suffix
   TF_VERSION: =1.7.0
 
 
@@ -203,7 +202,7 @@ jobs:
     with:
       aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
-      bucket_name: ${{ env.LAMBDA_PACKAGE_BUCKET }}-${{ needs.env-vars.outputs.ENVIRONMENT }}
+      bucket_name: ${{ vars.LAMBDA_PKG_BUCKET_PREFIX }}-${{ needs.env-vars.outputs.ENVIRONMENT }}
       environment: ${{ needs.env-vars.outputs.ENVIRONMENT }}
       object_key: ${{ github.event.repository.name }}/${{ matrix.LAMBDA_NAME }}.zip
       object_name: ${{ matrix.LAMBDA_NAME }}.zip
@@ -280,5 +279,5 @@ jobs:
           # triggers lambda function to use new updated zip archive
           aws lambda update-function-code \
             --function-name ${{ matrix.LAMBDA_NAME }} \
-            --s3-bucket ${{ env.LAMBDA_PACKAGE_BUCKET }}-${{ needs.env-vars.outputs.ENVIRONMENT }} \
+            --s3-bucket ${{ vars.LAMBDA_PKG_BUCKET_PREFIX }}-${{ needs.env-vars.outputs.ENVIRONMENT }} \
             --s3-key ${{ matrix.LAMBDA_NAME }}.zip
