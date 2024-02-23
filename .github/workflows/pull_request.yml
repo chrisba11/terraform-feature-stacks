@@ -225,11 +225,11 @@ jobs:
   test1:
     runs-on: ubuntu-latest
     outputs:
-      STACK_1: ${{ steps.set_outputs.outputs.STACK_1 }}
-      STACK_2: ${{ steps.set_outputs.outputs.STACK_2 }}
-      STACK_3: ${{ steps.set_outputs.outputs.STACK_3 }}
-      STACK_4: ${{ steps.set_outputs.outputs.STACK_4 }}
-      STACK_5: ${{ steps.set_outputs.outputs.STACK_5 }}
+      STACK_1: ${{ steps.set-outputs.outputs.STACK_1 }}
+      STACK_2: ${{ steps.set-outputs.outputs.STACK_2 }}
+      STACK_3: ${{ steps.set-outputs.outputs.STACK_3 }}
+      STACK_4: ${{ steps.set-outputs.outputs.STACK_4 }}
+      STACK_5: ${{ steps.set-outputs.outputs.STACK_5 }}
     strategy:
       fail-fast: false
       matrix:
@@ -245,7 +245,8 @@ jobs:
           - STACK_NAME: StackFive
             INDEX: 4
     steps:
-      - run: |
+      - id: set-outputs
+        run: |
           case "${{ matrix.INDEX }}" in
             0)
               echo "::set-output name=STACK_1::${{ matrix.STACK_NAME }}"
