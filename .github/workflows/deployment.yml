@@ -280,7 +280,7 @@ jobs:
     needs: 
       - env-vars
       - deploy
-      - tf-apply-api
+      - tf-apply
     strategy:
       fail-fast: false
       matrix:
