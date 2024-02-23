@@ -105,6 +105,7 @@ jobs:
             matches=false
           fi
 
+          echo "MATCHES = ${matches}"
           echo "MATCHES=${matches}" >> $GITHUB_OUTPUT
 
       - name: Upload to S3

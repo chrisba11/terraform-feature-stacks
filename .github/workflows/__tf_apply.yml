@@ -152,4 +152,4 @@ jobs:
       - name: Terraform Apply
         if: steps.artifact.outputs.EXISTS == 'true'
         working-directory: ${{ inputs.working_directory }}
-        run: terraform apply artifacts/${{ env.ARTIFACT_NAME }}/${{ steps.artifact.outputs.PLAN_FILE }}
+        run: terraform apply artifacts/${{ steps.artifact.outputs.PLAN_FILE }}
