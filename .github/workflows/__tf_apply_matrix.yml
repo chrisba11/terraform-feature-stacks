@@ -30,25 +30,29 @@ jobs:
 
           # Initialize the matrix string
           MATRIX="{\"include\":["
+          FILES_FOUND=false
 
-          # Initialize an associative array to track unique stack names
-          declare -A unique_stacks=()
-
-          # Find all .tfplan files in the artifacts directory
-          for FILE in artifacts/*.tfplan; do
-            # Extract the stack name from the file name
-            STACK_NAME=$(echo "$FILE" | sed 's/.*-\(.*\)\.tfplan/\1/')
-
-            # Check if the stack name is already in the set
-            if [[ -z "${unique_stacks[$STACK_NAME]}" ]]; then
-              # If not, add it to the set and the matrix
-              unique_stacks[$STACK_NAME]=1
+          # Run through list of files ending with '.tfplan'.
+          for FILE in *.tfplan; do
+            # Check if the globbing found any files by checking if the file exists.
+            if [ -f "$FILE" ]; then
+              FILES_FOUND=true
+              # Extract the STACK_NAME from the file name.
+              STACK_NAME=$(basename "$FILE" .tfplan | sed 's/.*-\(.*\)$/\1/')
+              # Append the extracted STACK_NAME to the MATRIX string.
               MATRIX="${MATRIX}{\"STACK_NAME\":\"${STACK_NAME}\"},"
             fi
           done
 
-          # Remove the trailing comma and close the JSON object
-          MATRIX="${MATRIX%,}]}"
-          echo "MATRIX = $MATRIX"
+          # Check if any files were found and processed.
+          if [ "$FILES_FOUND" = true ]; then
+            # Remove the trailing comma from the last entry.
+            MATRIX="${MATRIX%,}]}"
+          else
+            # Ensure MATRIX is properly formatted as an empty matrix if no files are found.
+            MATRIX="{\"include\":[]}"
+          fi
 
+          echo "MATRIX=$MATRIX"
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
