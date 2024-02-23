@@ -86,8 +86,9 @@ jobs:
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: '*-${{ env.ARTIFACT_NAME }}'
+          pattern: '*-${{ env.ARTIFACT_NAME }}'
           path: ${{ inputs.working_directory }}/artifacts
+          merge-multiple: true
 
       - name: Set Artifact Output
         id: artifact

@@ -19,8 +19,9 @@ jobs:
       - name: Download Plan Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: '*.tfplan'
+          pattern: '*.tfplan'
           path: artifacts
+          merge-multiple: true
 
       - name: Create Matrix
         id: create-matrix

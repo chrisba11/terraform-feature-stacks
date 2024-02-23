@@ -94,11 +94,6 @@ jobs:
           build_version=${now}_${short_sha}
           echo "BUILD_VERSION=$(echo $build_version)" >> $GITHUB_ENV
 
-      - name: Download Lambda Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: ${{ inputs.working_directory }}/artifacts
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
