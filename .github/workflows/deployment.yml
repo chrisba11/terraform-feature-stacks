@@ -253,7 +253,7 @@ jobs:
     name: Terraform Apply
     needs: 
       - env-vars
-      - tf-apply_matrix
+      - tf-apply-matrix
     # Using the matrix strategy here because the 'env' context is not available.
     # This gives us the ability to define the stack name once and use many times in the inputs.
     # The matrix values are coming from the `tf-apply-matrix` job.
