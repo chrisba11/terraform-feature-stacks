@@ -85,7 +85,6 @@ jobs:
     with:
       aws_account_id: ${{ vars.DEV_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
-      environment: dev
       feature_tag: ${{ needs.env-vars.outputs.FEATURE_TAG }}
       role_name: GithubActionsRole-Write
       terraform_version: ${{ needs.env-vars.outputs.TF_VERSION }}

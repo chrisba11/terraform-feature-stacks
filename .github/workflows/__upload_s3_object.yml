@@ -19,7 +19,7 @@ on:
         type: string
 
       environment:
-        description: Deployment environment.
+        description: Deployment environment (used for environment protection and concurrency).  
         required: false
         type: string
 
