@@ -1,4 +1,4 @@
-name: Build Python Lambda
+name: __build_python_lambda.yml
 
 on:
   workflow_call:

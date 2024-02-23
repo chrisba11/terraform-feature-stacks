@@ -8,9 +8,8 @@ resource "aws_lambda_function" "this" {
   role          = aws_iam_role.this.arn
 
   # S3 object as source for the Lambda function code
-  s3_bucket         = var.lambda_package_bucket_name
-  s3_key            = var.lambda_package_object_key
-  s3_object_version = var.lambda_package_object_version
+  s3_bucket = var.lambda_package_bucket_name
+  s3_key    = var.lambda_package_object_key
 
   dynamic "vpc_config" {
     for_each = var.vpc_config != null ? [true] : []

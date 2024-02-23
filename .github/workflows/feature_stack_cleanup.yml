@@ -78,21 +78,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        stack_name:
+        STACK_NAME:
           - api
     if: ${{ needs.env-vars.outputs.CONTINUE == 'true' }}
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_destroy.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_destroy.yml@v1
     with:
       aws_account_id: ${{ vars.DEV_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
-      environment: dev
       feature_tag: ${{ needs.env-vars.outputs.FEATURE_TAG }}
       role_name: GithubActionsRole-Write
       terraform_version: ${{ needs.env-vars.outputs.TF_VERSION }}
       tf_backend_name: ${{ vars.TF_BACKEND_PREFIX }}-dev
-      tf_backend_key: ${{ github.event.repository.name }}/feature/${{ matrix.stack_name }}_${{ needs.env-vars.outputs.FEATURE_TAG }}
+      tf_backend_key: ${{ github.event.repository.name }}/feature/${{ matrix.STACK_NAME }}_${{ needs.env-vars.outputs.FEATURE_TAG }}.tfstate
       tfvars_path: ./environments/dev.tfvars
-      working_directory: infra/tf/stacks/${{ matrix.stack_name }}
+      working_directory: infra/tf/stacks/${{ matrix.STACK_NAME }}
 
 
   delete-feature-git-tag:

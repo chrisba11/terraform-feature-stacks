@@ -1,40 +1,35 @@
-name: Terraform Plan
+name: __tf_plan.yml
 
 on:
   workflow_call:
     inputs:
       aws_account_id:
-        description: ID of the AWS Account where resources will be deployed
+        description: ID of the AWS Account where resources will be deployed.
         required: true
         type: string
 
       aws_region:
-        description: AWS region where GitHub IAM role lives
+        description: AWS region where GitHub IAM role lives.
         required: true
         type: string
 
       environment:
-        description: Deployment environment (used for artifact name)
-        required: true
-        type: string
-
-      feature_tag:
-        description: Tag that will be added to feature stack resources
+        description: Deployment environment (used for artifact name and concurrency).
         required: false
         type: string
 
-      lambda_artifact_path:
-        description: Directory path where Lambda artifacts will be downloaded.
+      feature_tag:
+        description: Tag that will be added to feature stack resources.
         required: false
         type: string
 
       role_name:
-        description: Name of IAM Role to assume
+        description: Name of IAM Role to assume.
         required: true
         type: string
 
       role_session_duration:
-        description: Length of time in seconds assumed role token will be valid
+        description: Length of time in seconds assumed role token will be valid.
         required: false
         type: number
         default: 3600
@@ -46,32 +41,32 @@ on:
         default: ${{ github.event.repository.name }}+run=${{ github.run_id }}-${{ github.run_number }}+${{ github.triggering_actor }}
 
       stack_name:
-        description: Name of Terraform stack
+        description: Name of Terraform stack.
         required: true
         type: string
 
       terraform_version:
-        description: Version of Terraform to use in workflow
+        description: Version of Terraform to use in workflow.
         required: true
         type: string
 
       tf_backend_name:
-        description: Name of the S3 bucket and DynamoDB table used for Terraform state backend configuration
+        description: Name of the S3 bucket and DynamoDB table used for Terraform state backend configuration.
         required: true
         type: string
 
       tf_backend_key:
-        description: S3 key used for Terraform state backend configuration
+        description: S3 key used for Terraform state backend configuration.
         required: true
         type: string
 
       tfvars_path:
-        description: Path to .tfvars file within working directory
+        description: Path to .tfvars file within working directory.
         required: false
         type: string
 
       working_directory:
-        description: Path to working directory where Terraform commands should be run
+        description: Path to working directory where Terraform commands should be run.
         required: true
         type: string
 
@@ -99,11 +94,6 @@ jobs:
           build_version=${now}_${short_sha}
           echo "BUILD_VERSION=$(echo $build_version)" >> $GITHUB_ENV
 
-      - name: Download Lambda Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: ${{ inputs.working_directory }}/artifacts
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -128,7 +118,7 @@ jobs:
           terraform init \
             -backend-config="bucket=${{ inputs.tf_backend_name }}" \
             -backend-config="dynamodb_table=${{ inputs.tf_backend_name }}" \
-            -backend-config="key=${{ inputs.tf_backend_key }}.tfstate"
+            -backend-config="key=${{ inputs.tf_backend_key }}"
 
       - name: Terraform Validate
         working-directory: ${{ inputs.working_directory }}

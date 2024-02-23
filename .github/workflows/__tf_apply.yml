@@ -1,35 +1,35 @@
-name: Terraform Apply
+name: __tf_apply.yml
 
 on:
   workflow_call:
     inputs:
       aws_account_id:
-        description: ID of the AWS Account where resources will be deployed
+        description: ID of the AWS Account where resources will be deployed.
         required: true
         type: string
 
       aws_region:
-        description: AWS region where GitHub IAM role lives
+        description: AWS region where GitHub IAM role lives.
         required: true
         type: string
 
       environment:
-        description: Deployment environment (used for environment protection)
-        required: true
+        description: Deployment environment (used for environment protection and concurrency).
+        required: false
         type: string
 
       feature_tag:
-        description: Tag that will be added to feature stack resources
+        description: Tag that will be added to feature stack resources.
         required: false
         type: string
 
       role_name:
-        description: Name of IAM Role to assume
+        description: Name of IAM Role to assume.
         required: true
         type: string
 
       role_session_duration:
-        description: Length of time in seconds assumed role token will be valid
+        description: Length of time in seconds assumed role token will be valid.
         required: false
         type: number
         default: 3600
@@ -41,27 +41,27 @@ on:
         default: ${{ github.event.repository.name }}+run=${{ github.run_id }}-${{ github.run_number }}+${{ github.triggering_actor }}
 
       stack_name:
-        description: Name of Terraform stack
+        description: Name of Terraform stack.
         required: true
         type: string
 
       terraform_version:
-        description: Version of Terraform to use in workflow
+        description: Version of Terraform to use in workflow.
         required: true
         type: string
 
       tf_backend_name:
-        description: Name of the S3 bucket and DynamoDB table used for Terraform state backend configuration
+        description: Name of the S3 bucket and DynamoDB table used for Terraform state backend configuration.
         required: true
         type: string
 
       tf_backend_key:
-        description: S3 key used for Terraform state backend configuration
+        description: S3 key used for Terraform state backend configuration.
         required: true
         type: string
 
       working_directory:
-        description: Path to working directory where Terraform commands should be run
+        description: Path to working directory where Terraform commands should be run.
         required: true
         type: string
 
@@ -86,6 +86,7 @@ jobs:
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
+          name: ${{ env.ARTIFACT_NAME }}
           path: ${{ inputs.working_directory }}/artifacts
 
       - name: Set Artifact Output
@@ -113,12 +114,9 @@ jobs:
           if [[ $artifact_exists -eq 0 ]]; then
             # set 'exists' value to true
             exists=true
-            # navigate to artifact directory
-            cd ${{ env.ARTIFACT_NAME }}
-            # set 'plan_file' value to name of .tfplan file inside artifact directory
+            # set 'plan_file' value to name of most recent .tfplan file
             # in some cases, on rerunning the workflow job, there may be more than one file
-            # set value to name of most recent plan file
-            plan_file=$(ls | sort | tail -n 1)
+            plan_file=$(ls | grep -w "${{ env.ARTIFACT_NAME }}" | sort | tail -n 1)
           fi
 
           echo "artifact_name = ${{ env.ARTIFACT_NAME }}"
@@ -149,9 +147,9 @@ jobs:
           terraform init \
             -backend-config="bucket=${{ inputs.tf_backend_name }}" \
             -backend-config="dynamodb_table=${{ inputs.tf_backend_name }}" \
-            -backend-config="key=${{ inputs.tf_backend_key }}.tfstate"
+            -backend-config="key=${{ inputs.tf_backend_key }}"
 
       - name: Terraform Apply
         if: steps.artifact.outputs.EXISTS == 'true'
         working-directory: ${{ inputs.working_directory }}
-        run: terraform apply artifacts/${{ env.ARTIFACT_NAME }}/${{ steps.artifact.outputs.PLAN_FILE }}
+        run: terraform apply artifacts/${{ steps.artifact.outputs.PLAN_FILE }}

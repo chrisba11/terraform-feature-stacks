@@ -61,45 +61,14 @@ MODIFIED_FILES=$(git status --porcelain | grep -E "^ M" | awk '{print $2}')
 if [ -z "$MODIFIED_FILES" ]; then
   # No changes detected, continue with commit
   exit 0
-fi
-
-echo "It looks like the Terraform configuration has changed." \
+else
+  echo "It looks like the Terraform configuration has changed." \
   "Documentation has been updated to reflect these changes.\n" \
-  "If you want to accept these changes, press 'Y' and then run" \
-  "'git add' for the following files and re-commit:\n"
+  "Run 'git add' for the following files and re-commit:\n"
 
-echo "$MODIFIED_FILES" | while read -r file; do
-  echo "  - $file"
-done
+  echo "$MODIFIED_FILES" | while read -r file; do
+    echo "  - $file"
+  done
 
-echo "\nTo ignore these changes, press 'N'."
-
-while true; do
-  # Wait for user input
-  printf "Do you want to accept the documentation changes? (Y/N): "
-  read user_choice
-
-  case $user_choice in
-    [Yy]* )
-      # User accepted changes, remind them to add files in yellow
-      printf "${YELLOW}Please run 'git add' on the following updated documentation files and re-commit:\n${NC}"
-      echo "$MODIFIED_FILES" | while read -r file; do
-        printf "${YELLOW}  - $file\n${NC}"
-      done
-      exit 1
-      ;;
-    [Nn]* )
-      # User rejected changes, revert modifications
-      echo "$MODIFIED_FILES" | while read -r file; do
-        git checkout -- "$file"
-      done
-      exit 0
-      ;;
-    * )
-      # Invalid input, ask again
-      echo "Invalid input. Please enter Y or N."
-      ;;
-  esac
-done
-
-exit 0
+  exit 1
+fi

@@ -101,7 +101,7 @@ Resources:
               StringEquals:
                 "aws:SourceAccount": !Ref "AWS::AccountId"
               ArnLike:
-                "aws:SourceArn": !GetAtt TerraformStateLogsBucket.Arn
+                "aws:SourceArn": !GetAtt TerraformStateBucket.Arn
 
 # S3 Bucket Policy disabling anything from deleting objects in the state file bucket
   TerraformStateBucketPolicy:

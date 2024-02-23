@@ -1,0 +1,62 @@
+name: __tf_apply_matrix.yml
+
+on:
+  workflow_call:
+    outputs:
+      MATRIX:
+        description: A matrix object that includes all Terraform stacks with planned changes.
+        value: ${{ jobs.create-matrix.outputs.MATRIX }}
+
+env:
+  ARTIFACT_NAME: ${{ inputs.feature_tag != '' && inputs.feature_tag || inputs.environment }}-${{ inputs.stack_name }}.tfplan
+  # latest commit on branch triggering workflow (helps avoid using merge commit)
+  COMMIT_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+
+jobs:
+  create-matrix:
+    name: Create TF Apply Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      MATRIX: ${{ steps.create-matrix.outputs.matrix }}
+    steps:
+      - name: Download Plan Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: '*.tfplan'
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create Matrix
+        id: create-matrix
+        working-directory: artifacts
+        run: |
+
+          # Initialize the matrix string
+          MATRIX="{\"include\":["
+          FILES_FOUND=false
+
+          # Run through list of files ending with '.tfplan'.
+          for FILE in *.tfplan; do
+            # Check if the globbing found any files by checking if the file exists.
+            if [ -f "$FILE" ]; then
+              FILES_FOUND=true
+              # Extract the STACK_NAME from the file name.
+              STACK_NAME=$(basename "$FILE" .tfplan | sed 's/.*-\(.*\)$/\1/')
+              # Append the extracted STACK_NAME to the MATRIX string.
+              MATRIX="${MATRIX}{\"STACK_NAME\":\"${STACK_NAME}\"},"
+            fi
+          done
+
+          # Check if any files were found and processed.
+          if [ "$FILES_FOUND" = true ]; then
+            # Remove the trailing comma from the last entry.
+            MATRIX="${MATRIX%,}]}"
+          else
+            # Ensure MATRIX is properly formatted as an empty matrix if no files are found.
+            MATRIX="{\"include\":[]}"
+          fi
+
+          echo "MATRIX=$MATRIX"
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+

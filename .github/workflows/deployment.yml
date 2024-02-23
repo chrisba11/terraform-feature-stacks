@@ -70,6 +70,10 @@ jobs:
           echo "tf_version=${TF_VERSION}" >> $GITHUB_OUTPUT
 
 
+  ###################################################################
+  # These first few jobs must be run before the remaining TF stacks #
+  ###################################################################
+
   tf-plan-oidc:
     name: Terraform Plan - OIDC
     needs:
@@ -79,20 +83,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        stack_name:
+        STACK_NAME:
           - oidc
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_plan.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_plan.yml@v1
     with:
       aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
       environment: ${{ needs.env-vars.outputs.ENVIRONMENT }}
       role_name: GithubActionsRole-ReadOnly
-      stack_name: ${{ matrix.stack_name }}
+      stack_name: ${{ matrix.STACK_NAME }}
       terraform_version: ${{ needs.env-vars.outputs.TF_VERSION }}
       tf_backend_name: ${{ vars.TF_BACKEND_PREFIX }}-${{ needs.env-vars.outputs.ENVIRONMENT }}
-      tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.stack_name }}
+      tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.STACK_NAME }}
       tfvars_path: ./environments/${{ needs.env-vars.outputs.ENVIRONMENT }}.tfvars
-      working_directory: infra/tf/stacks/${{ matrix.stack_name }}
+      working_directory: infra/tf/stacks/${{ matrix.STACK_NAME }}
 
 
   tf-apply-oidc:
@@ -105,73 +109,75 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        stack_name:
+        STACK_NAME:
           - oidc
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply.yml@v1
     with:
       aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
       environment: ${{ needs.env-vars.outputs.ENVIRONMENT }}
       role_name: GithubActionsRole-Write
-      stack_name: ${{ matrix.stack_name }}
+      stack_name: ${{ matrix.STACK_NAME }}
       terraform_version: ${{ needs.env-vars.outputs.TF_VERSION }}
       tf_backend_name: ${{ vars.TF_BACKEND_PREFIX }}-${{ needs.env-vars.outputs.ENVIRONMENT }}
-      tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.stack_name }}
-      working_directory: infra/tf/stacks/${{ matrix.stack_name }}
+      tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.STACK_NAME }}
+      working_directory: infra/tf/stacks/${{ matrix.STACK_NAME }}
 
 
-  # Commenting out VPC jobs because example resources do not require the VPC setup
-
-  # tf-plan-vpc:
-  #   name: Terraform Plan - VPC
-  #   needs:
-  #     - env-vars
-  #     - tf-apply-oidc
-  #   # using the matrix strategy here because the 'env' context is not available
-  #   # this gives us the ability to define the stack name once and use many times in the inputs
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       stack_name:
-  #         - vpc
-  #   uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_plan.yml@main
-  #   with:
-  #     aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
-  #     aws_region: ${{ vars.AWS_REGION }}
-  #     environment: ${{ needs.env-vars.outputs.ENVIRONMENT }}
-  #     role_name: GithubActionsRole-ReadOnly
-  #     stack_name: ${{ matrix.stack_name }}
-  #     terraform_version: ${{ needs.env-vars.outputs.TF_VERSION }}
-  #     tf_backend_name: ${{ vars.TF_BACKEND_PREFIX }}-${{ needs.env-vars.outputs.ENVIRONMENT }}
-  #     tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.stack_name }}
-  #     tfvars_path: ./environments/${{ needs.env-vars.outputs.ENVIRONMENT }}.tfvars
-  #     working_directory: infra/tf/stacks/${{ matrix.stack_name }}
+  tf-plan-storage:
+    name: Terraform Plan - Storage
+    needs:
+      - env-vars
+      - tf-apply-oidc
+    # using the matrix strategy here because the 'env' context is not available
+    # this gives us the ability to define the stack name once and use many times in the inputs
+    strategy:
+      fail-fast: false
+      matrix:
+        STACK_NAME:
+          - storage
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_plan.yml@v1
+    with:
+      aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
+      aws_region: ${{ vars.AWS_REGION }}
+      environment: ${{ needs.env-vars.outputs.ENVIRONMENT }}
+      role_name: GithubActionsRole-ReadOnly
+      stack_name: ${{ matrix.STACK_NAME }}
+      terraform_version: ${{ needs.env-vars.outputs.TF_VERSION }}
+      tf_backend_name: ${{ vars.TF_BACKEND_PREFIX }}-${{ needs.env-vars.outputs.ENVIRONMENT }}
+      tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.STACK_NAME }}.tfstate
+      tfvars_path: ./environments/${{ needs.env-vars.outputs.ENVIRONMENT }}.tfvars
+      working_directory: infra/tf/stacks/${{ matrix.STACK_NAME }}
 
 
-  # tf-apply-vpc:
-  #   name: Terraform Apply - VPC
-  #   needs: 
-  #     - env-vars
-  #     - tf-plan-vpc
-  #   # using the matrix strategy here because the 'env' context is not available
-  #   # this gives us the ability to define the stack name once and use many times in the inputs
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       stack_name:
-  #         - vpc
-  #   uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply.yml@main
-  #   with:
-  #     aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
-  #     aws_region: ${{ vars.AWS_REGION }}
-  #     environment: ${{ needs.env-vars.outputs.ENVIRONMENT }}
-  #     role_name: GithubActionsRole-Write
-  #     stack_name: ${{ matrix.stack_name }}
-  #     terraform_version: ${{ needs.env-vars.outputs.TF_VERSION }}
-  #     tf_backend_name: ${{ vars.TF_BACKEND_PREFIX }}-${{ needs.env-vars.outputs.ENVIRONMENT }}
-  #     tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.stack_name }}
-  #     working_directory: infra/tf/stacks/${{ matrix.stack_name }}
+  tf-apply-storage:
+    name: Terraform Apply - Storage
+    needs: 
+      - env-vars
+      - tf-plan-storage
+    # using the matrix strategy here because the 'env' context is not available
+    # this gives us the ability to define the stack name once and use many times in the inputs
+    strategy:
+      fail-fast: false
+      matrix:
+        STACK_NAME:
+          - storage
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply.yml@v1
+    with:
+      aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
+      aws_region: ${{ vars.AWS_REGION }}
+      environment: ${{ needs.env-vars.outputs.ENVIRONMENT }}
+      role_name: GithubActionsRole-Write
+      stack_name: ${{ matrix.STACK_NAME }}
+      terraform_version: ${{ needs.env-vars.outputs.TF_VERSION }}
+      tf_backend_name: ${{ vars.TF_BACKEND_PREFIX }}-${{ needs.env-vars.outputs.ENVIRONMENT }}
+      tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.STACK_NAME }}.tfstate
+      working_directory: infra/tf/stacks/${{ matrix.STACK_NAME }}
 
+
+  #####################################################
+  # These jobs must run after the preceding TF stacks #
+  #####################################################
 
   build:
     name: Build Lambda Package
@@ -180,62 +186,120 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        lambda_name:
+        LAMBDA_NAME:
           - ImageDownload
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/__build_python_lambda.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__build_python_lambda.yml@v1
     with:
       aws_region: ${{ vars.AWS_REGION }}
-      lambda_name: ${{ matrix.lambda_name }}
+      lambda_name: ${{ matrix.LAMBDA_NAME }}
       python_version: 3.11
-      src_directory: src/lambdas/${{ matrix.lambda_name }}
+      src_directory: src/lambdas/${{ matrix.LAMBDA_NAME }}
 
 
-  tf-plan-api:
-    name: Terraform Plan - API
+  deploy:
+    name: Deploy Lambda Package
     needs:
       - env-vars
       - build
+    strategy:
+      fail-fast: false
+      matrix:
+        LAMBDA_NAME:
+          - ImageDownload
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__upload_s3_object.yml@v1
+    with:
+      aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
+      aws_region: ${{ vars.AWS_REGION }}
+      bucket_name: ${{ vars.LAMBDA_PKG_BUCKET_PREFIX }}-${{ needs.env-vars.outputs.ENVIRONMENT }}
+      environment: ${{ needs.env-vars.outputs.ENVIRONMENT }}
+      object_key: ${{ github.event.repository.name }}/${{ matrix.LAMBDA_NAME }}.zip
+      object_name: ${{ matrix.LAMBDA_NAME }}.zip
+      role_name: GithubActionsRole-Write
+
+
+  tf-plan:
+    name: Terraform Plan
+    needs:
+      - env-vars
+      - deploy
     # using the matrix strategy here because the 'env' context is not available
     # this gives us the ability to define the stack name once and use many times in the inputs
     strategy:
       fail-fast: false
       matrix:
-        stack_name:
+        STACK_NAME:
           - api
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_plan.yml@main
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_plan.yml@v1
     with:
       aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
       environment: ${{ needs.env-vars.outputs.ENVIRONMENT }}
       role_name: GithubActionsRole-ReadOnly
-      stack_name: ${{ matrix.stack_name }}
+      stack_name: ${{ matrix.STACK_NAME }}
       terraform_version: ${{ needs.env-vars.outputs.TF_VERSION }}
       tf_backend_name: ${{ vars.TF_BACKEND_PREFIX }}-${{ needs.env-vars.outputs.ENVIRONMENT }}
-      tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.stack_name }}
+      tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.STACK_NAME }}.tfstate
       tfvars_path: ./environments/${{ needs.env-vars.outputs.ENVIRONMENT }}.tfvars
-      working_directory: infra/tf/stacks/${{ matrix.stack_name }}
+      working_directory: infra/tf/stacks/${{ matrix.STACK_NAME }}
 
 
-  tf-apply-api:
-    name: Terraform Apply - API
+  tf-apply-matrix:
+    name: Set TF Apply Matrix
+    needs: [ tf-plan ]
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply_matrix.yml@v1
+
+
+  tf-apply:
+    name: Terraform Apply
     needs: 
       - env-vars
-      - tf-plan-api
-    # using the matrix strategy here because the 'env' context is not available
-    # this gives us the ability to define the stack name once and use many times in the inputs
+      - tf-apply_matrix
+    # Using the matrix strategy here because the 'env' context is not available.
+    # This gives us the ability to define the stack name once and use many times in the inputs.
+    # The matrix values are coming from the `tf-apply-matrix` job.
+    # The matrix will only consist of those stacks from the TF Plan job that produced artifacts.
     strategy:
       fail-fast: false
-      matrix:
-        stack_name:
-          - api
-    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply.yml@main
+      matrix: ${{ fromJson(needs.tf-apply-matrix.outputs.MATRIX) }}
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply.yml@v1
     with:
       aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
       environment: ${{ needs.env-vars.outputs.ENVIRONMENT }}
       role_name: GithubActionsRole-Write
-      stack_name: ${{ matrix.stack_name }}
+      stack_name: ${{ matrix.STACK_NAME }}
       terraform_version: ${{ needs.env-vars.outputs.TF_VERSION }}
       tf_backend_name: ${{ vars.TF_BACKEND_PREFIX }}-${{ needs.env-vars.outputs.ENVIRONMENT }}
-      tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.stack_name }}
-      working_directory: infra/tf/stacks/${{ matrix.stack_name }}
+      tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.STACK_NAME }}.tfstate
+      working_directory: infra/tf/stacks/${{ matrix.STACK_NAME }}
+
+
+  update:
+    name: Update Lambda
+    runs-on: ubuntu-latest
+    needs: 
+      - env-vars
+      - deploy
+      - tf-apply-api
+    strategy:
+      fail-fast: false
+      matrix:
+        LAMBDA_NAME:
+          - ImageDownload
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}:role/GithubActionsRole-Write
+          aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 900
+          role-session-name: ${{ github.event.repository.name }}+run=${{ github.run_id }}-${{ github.run_number }}+${{ github.triggering_actor }}
+
+      - name: Update Lambda Function Code
+        run: |
+
+          # triggers lambda function to use new updated zip archive
+          aws lambda update-function-code \
+            --function-name ${{ matrix.LAMBDA_NAME }} \
+            --s3-bucket ${{ vars.LAMBDA_PKG_BUCKET_PREFIX }}-${{ needs.env-vars.outputs.ENVIRONMENT }} \
+            --s3-key ${{ matrix.LAMBDA_NAME }}.zip
