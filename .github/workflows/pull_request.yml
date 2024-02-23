@@ -111,7 +111,7 @@ jobs:
       aws_account_id: ${{ vars.DEV_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
       bucket_name: ${{ vars.LAMBDA_PKG_BUCKET_PREFIX }}-dev
-      object_key: ${{ github.event.repository.name }}/feature/${{ matrix.LAMBDA_NAME }}_${{ needs.env-vars.outputs.FEATURE_TAG }}.zip
+      object_key: feature/${{ matrix.LAMBDA_NAME }}_${{ needs.env-vars.outputs.FEATURE_TAG }}.zip
       object_name: ${{ matrix.LAMBDA_NAME }}_${{ needs.env-vars.outputs.FEATURE_TAG }}.zip
       role_name: GithubActionsRole-Write
 
