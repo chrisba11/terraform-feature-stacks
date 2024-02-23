@@ -2,6 +2,10 @@ name: __tf_apply_matrix.yml
 
 on:
   workflow_call:
+    outputs:
+      MATRIX:
+        description: A matrix object that includes all Terraform stacks with planned changes.
+        value: ${{ jobs.create-matrix.outputs.MATRIX }}
 
 env:
   ARTIFACT_NAME: ${{ inputs.feature_tag != '' && inputs.feature_tag || inputs.environment }}-${{ inputs.stack_name }}.tfplan
