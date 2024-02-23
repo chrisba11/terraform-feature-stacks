@@ -86,6 +86,7 @@ jobs:
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
+          name: '*-${{ env.ARTIFACT_NAME }}'
           path: ${{ inputs.working_directory }}/artifacts
 
       - name: Set Artifact Output
@@ -113,12 +114,9 @@ jobs:
           if [[ $artifact_exists -eq 0 ]]; then
             # set 'exists' value to true
             exists=true
-            # navigate to artifact directory
-            cd ${{ env.ARTIFACT_NAME }}
-            # set 'plan_file' value to name of .tfplan file inside artifact directory
+            # set 'plan_file' value to name of most recent .tfplan file
             # in some cases, on rerunning the workflow job, there may be more than one file
-            # set value to name of most recent plan file
-            plan_file=$(ls | sort | tail -n 1)
+            plan_file=$(ls | grep -w "${{ env.ARTIFACT_NAME }}" | sort | tail -n 1)
           fi
 
           echo "artifact_name = ${{ env.ARTIFACT_NAME }}"

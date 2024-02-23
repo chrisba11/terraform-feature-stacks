@@ -23,11 +23,6 @@ on:
         required: false
         type: string
 
-      lambda_artifact_path:
-        description: Directory path where Lambda artifacts will be downloaded.
-        required: false
-        type: string
-
       role_name:
         description: Name of IAM Role to assume.
         required: true
