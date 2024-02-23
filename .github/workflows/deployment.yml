@@ -273,6 +273,14 @@ jobs:
         LAMBDA_NAME:
           - ImageDownload
     steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}:role/GithubActionsRole-Write
+          aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 900
+          role-session-name: ${{ github.event.repository.name }}+run=${{ github.run_id }}-${{ github.run_number }}+${{ github.triggering_actor }}
+
       - name: Update Lambda Function Code
         run: |
 
