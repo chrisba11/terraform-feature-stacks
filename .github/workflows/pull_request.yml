@@ -108,10 +108,10 @@ jobs:
           - ImageDownload
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__upload_s3_object.yml@v1
     with:
-      aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
+      aws_account_id: ${{ vars.DEV_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
       bucket_name: ${{ vars.LAMBDA_PKG_BUCKET_PREFIX }}-${{ needs.env-vars.outputs.ENVIRONMENT }}
-      environment: ${{ needs.env-vars.outputs.ENVIRONMENT }}
+      environment: dev
       object_key: ${{ github.event.repository.name }}/feature/${{ matrix.LAMBDA_NAME }}_${{ needs.env-vars.outputs.FEATURE_TAG }}.zip
       object_name: ${{ matrix.LAMBDA_NAME }}_${{ needs.env-vars.outputs.FEATURE_TAG }}.zip
       role_name: GithubActionsRole-Write
