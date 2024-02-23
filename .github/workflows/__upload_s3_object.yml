@@ -73,7 +73,7 @@ jobs:
           role-session-name: ${{ inputs.role_session_name }}
 
       - name: Upload to S3
-        working-directory: artifacts/${{ inputs.object_name }}
+        working-directory: artifacts
         run: |
           aws s3 cp ${{ inputs.object_name }} \
             s3://${{ inputs.bucket_name }}/${{ inputs.object_key }}
