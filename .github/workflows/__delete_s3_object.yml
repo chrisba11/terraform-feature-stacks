@@ -1,4 +1,4 @@
-name: Delete S3 Object
+name: __delete_s3_object.yml
 
 on:
   workflow_call:

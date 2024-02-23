@@ -70,6 +70,10 @@ jobs:
           echo "tf_version=${TF_VERSION}" >> $GITHUB_OUTPUT
 
 
+  ###################################################################
+  # These first few jobs must be run before the remaining TF stacks #
+  ###################################################################
+
   tf-plan-oidc:
     name: Terraform Plan - OIDC
     needs:
@@ -171,6 +175,10 @@ jobs:
       working_directory: infra/tf/stacks/${{ matrix.STACK_NAME }}
 
 
+  #####################################################
+  # These jobs must run after the preceding TF stacks #
+  #####################################################
+
   build:
     name: Build Lambda Package
     # using the matrix strategy here because the 'env' context is not available
@@ -209,8 +217,8 @@ jobs:
       role_name: GithubActionsRole-Write
 
 
-  tf-plan-api:
-    name: Terraform Plan - API
+  tf-plan:
+    name: Terraform Plan
     needs:
       - env-vars
       - deploy
@@ -235,18 +243,24 @@ jobs:
       working_directory: infra/tf/stacks/${{ matrix.STACK_NAME }}
 
 
-  tf-apply-api:
-    name: Terraform Apply - API
+  tf-apply-matrix:
+    name: Set TF Apply Matrix
+    needs: [ tf-plan ]
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply_matrix.yml@v1
+
+
+  tf-apply:
+    name: Terraform Apply
     needs: 
       - env-vars
-      - tf-plan-api
-    # using the matrix strategy here because the 'env' context is not available
-    # this gives us the ability to define the stack name once and use many times in the inputs
+      - tf-apply_matrix
+    # Using the matrix strategy here because the 'env' context is not available.
+    # This gives us the ability to define the stack name once and use many times in the inputs.
+    # The matrix values are coming from the `tf-apply-matrix` job.
+    # The matrix will only consist of those stacks from the TF Plan job that produced artifacts.
     strategy:
       fail-fast: false
-      matrix:
-        STACK_NAME:
-          - api
+      matrix: ${{ fromJson(needs.env-vars.outputs.MATRIX) }}
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply.yml@v1
     with:
       aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}

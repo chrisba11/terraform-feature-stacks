@@ -1,4 +1,4 @@
-name: Upload S3 Object
+name: __upload_s3_object.yml
 
 on:
   workflow_call:

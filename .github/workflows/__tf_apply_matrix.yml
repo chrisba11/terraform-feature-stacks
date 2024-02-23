@@ -1,0 +1,53 @@
+name: __tf_apply_matrix.yml
+
+on:
+  workflow_call:
+
+env:
+  ARTIFACT_NAME: ${{ inputs.feature_tag != '' && inputs.feature_tag || inputs.environment }}-${{ inputs.stack_name }}.tfplan
+  # latest commit on branch triggering workflow (helps avoid using merge commit)
+  COMMIT_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+
+jobs:
+  create-matrix:
+    name: Create TF Apply Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      MATRIX: ${{ steps.create-matrix.outputs.matrix }}
+    steps:
+      - name: Download Plan Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: '*.tfplan'
+          path: artifacts
+
+      - name: Create Matrix
+        id: create-matrix
+        working-directory: artifacts
+        run: |
+
+          # Initialize the matrix string
+          MATRIX="{\"include\":["
+
+          # Initialize an associative array to track unique stack names
+          declare -A unique_stacks=()
+
+          # Find all .tfplan files in the artifacts directory
+          for FILE in artifacts/*.tfplan; do
+            # Extract the stack name from the file name
+            STACK_NAME=$(echo "$FILE" | sed 's/.*-\(.*\)\.tfplan/\1/')
+
+            # Check if the stack name is already in the set
+            if [[ -z "${unique_stacks[$STACK_NAME]}" ]]; then
+              # If not, add it to the set and the matrix
+              unique_stacks[$STACK_NAME]=1
+              MATRIX="${MATRIX}{\"STACK_NAME\":\"${STACK_NAME}\"},"
+            fi
+          done
+
+          # Remove the trailing comma and close the JSON object
+          MATRIX="${MATRIX%,}]}"
+          echo "MATRIX = $MATRIX"
+
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT

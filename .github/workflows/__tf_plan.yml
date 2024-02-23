@@ -1,4 +1,4 @@
-name: Terraform Plan
+name: __tf_plan.yml
 
 on:
   workflow_call:

@@ -1,4 +1,4 @@
-name: Terraform Destroy
+name: __tf_destroy.yml
 
 on:
   workflow_call:
