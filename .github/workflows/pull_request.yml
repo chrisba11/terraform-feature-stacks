@@ -142,18 +142,24 @@ jobs:
       working_directory: infra/tf/stacks/${{ matrix.STACK_NAME }}
 
 
+  tf-apply-matrix:
+    name: Set TF Apply Matrix
+    needs: [ tf-plan ]
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply_matrix.yml@v1
+
+
   tf-apply:
     name: Terraform Apply
     needs:
       - env-vars
-      - tf-plan
-    # using the matrix strategy here because the 'env' context is not available
-    # this gives us the ability to define the stack name once and use many times in the inputs
+      - tf-apply-matrix
+    # Using the matrix strategy here because the 'env' context is not available.
+    # This gives us the ability to define the stack name once and use many times in the inputs.
+    # The matrix values are coming from the `tf-apply-matrix` job.
+    # The matrix will only consist of those stacks from the TF Plan job that produced artifacts.
     strategy:
       fail-fast: false
-      matrix:
-        STACK_NAME:
-          - api
+      matrix: ${{ fromJson(needs.tf-apply-matrix.outputs.MATRIX) }}
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply.yml@v1
     with:
       aws_account_id: ${{ vars.DEV_ACCOUNT_ID }}

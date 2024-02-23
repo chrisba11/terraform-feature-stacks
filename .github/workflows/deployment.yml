@@ -260,7 +260,7 @@ jobs:
     # The matrix will only consist of those stacks from the TF Plan job that produced artifacts.
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.env-vars.outputs.MATRIX) }}
+      matrix: ${{ fromJson(needs.tf-apply-matrix.outputs.MATRIX) }}
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply.yml@v1
     with:
       aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
