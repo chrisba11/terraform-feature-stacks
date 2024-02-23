@@ -186,7 +186,7 @@ jobs:
           # triggers lambda function to use new updated zip archive
           aws lambda update-function-code \
             --function-name ${{ matrix.LAMBDA_NAME }}_${{ needs.env-vars.outputs.FEATURE_TAG }} \
-            --s3-bucket ${{ vars.LAMBDA_PKG_BUCKET_PREFIX }}-${{ needs.env-vars.outputs.ENVIRONMENT }} \
+            --s3-bucket ${{ vars.LAMBDA_PKG_BUCKET_PREFIX }}-dev \
             --s3-key feature/${{ matrix.LAMBDA_NAME }}_${{ needs.env-vars.outputs.FEATURE_TAG }}.zip
 
 
