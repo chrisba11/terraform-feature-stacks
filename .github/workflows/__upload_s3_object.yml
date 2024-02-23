@@ -80,15 +80,24 @@ jobs:
           # Calculate the local file's hash
           LOCAL_HASH=$(md5sum "${{ inputs.object_name }}" | awk '{ print $1 }')
 
+          # Allow non-zero exit code without failure
+          set +e
+
           # Try to retrieve the existing file's custom metadata (content hash) from S3
           EXISTING_HASH=$(aws s3api head-object \
             --bucket "${{ inputs.bucket_name }}" \
             --key "${{ inputs.object_key }}" \
             --query "Metadata.content-md5" --output text 2>/dev/null)
 
+          # Capture exit code
+          RESULT=$?
+
+          # Reset default exit code failure behavior
+          set -e
+
           # Check if the command to retrieve metadata was successful (file exists)
           # and if hashes match
-          if [[ $? -eq 0 && "$LOCAL_HASH" == "$EXISTING_HASH" ]]; then
+          if [[ $RESULT -eq 0 && "$LOCAL_HASH" == "$EXISTING_HASH" ]]; then
             echo "Local file md5 matches the existing S3 object's metadata."
             echo "Skipping upload."
             matches=true
