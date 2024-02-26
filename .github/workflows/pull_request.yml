@@ -33,8 +33,8 @@ env:
 
 jobs:
   env-vars:
-    # this job sets environment variable outputs consumed by downstream jobs
-    # this is needed because the env: context is not available to reusable workflows
+    # This job sets environment variable outputs consumed by downstream jobs.
+    # This is needed because the env: context is not available to reusable workflows.
     name: Set Env Vars as Outputs
     runs-on: ubuntu-latest
     outputs:
@@ -81,12 +81,14 @@ jobs:
     name: Build Lambda Package
     needs:
       - env-vars
-    # Using the matrix strategy here because the 'env' context is not available.
-    # This gives us the ability to define the lambda name once and use many times in the inputs.
+    # Using the matrix strategy here because the 'env' context is not available
+    # This gives us the ability to define the stack name once and use many times in the inputs,
+    # or define multiple stack names and have the job run against each stack.
     strategy:
       fail-fast: false
       matrix:
         LAMBDA_NAME:
+          - DownloadImage
           - ImageDownload
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__build_python_lambda.yml@v1
     with:
@@ -105,6 +107,7 @@ jobs:
       fail-fast: false
       matrix:
         LAMBDA_NAME:
+          - DownloadImage
           - ImageDownload
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__upload_s3_object.yml@v1
     with:
