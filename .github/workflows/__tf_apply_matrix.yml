@@ -55,13 +55,13 @@ jobs:
                 # Remove the trailing comma from the last entry.
                 MATRIX="${MATRIX%,}]}"
               else
-                # Ensure MATRIX is properly formatted as an empty matrix if no files are found.
-                MATRIX="{\"include\":[]}"
+                # Ensure MATRIX is assigned the special skip value if no files are found.
+                MATRIX="{\"include\":[{\"STACK_NAME\":\"SKIP\"}]}"
               fi
           else
-              # If 'artifacts' directory doesn't exist, format MATRIX as an empty matrix.
+              # If 'artifacts' directory doesn't exist, format MATRIX with special skip value.
               echo "No artifacts directory."
-              MATRIX="{\"include\":[]}"
+              MATRIX="{\"include\":[{\"STACK_NAME\":\"SKIP\"}]}"
           fi
 
           echo "MATRIX=$MATRIX"

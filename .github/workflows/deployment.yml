@@ -246,6 +246,7 @@ jobs:
 
   tf-apply:
     name: Terraform Apply - Dependent Stacks
+    if: ${{ matrix.STACK_NAME != 'SKIP' }}
     needs: 
       - env-vars
       - tf-apply-matrix
