@@ -4,8 +4,8 @@ import logging
 import os
 import requests
 
-bucket_name = os.environ.get('DESTINATION_BUCKET_NAME')
-bucket_region = os.environ.get('DESTINATION_BUCKET_REGION')
+bucket_name = os.environ.get('IMAGE_BUCKET_NAME')
+bucket_region = os.environ.get('IMAGE_BUCKET_REGION')
 
 s3 = boto3.client('s3', region_name=bucket_region)
 
