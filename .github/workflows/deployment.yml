@@ -205,7 +205,7 @@ jobs:
       aws_region: ${{ vars.AWS_REGION }}
       bucket_name: ${{ vars.LAMBDA_PKG_BUCKET_PREFIX }}-${{ needs.env-vars.outputs.ENVIRONMENT }}
       environment: ${{ needs.env-vars.outputs.ENVIRONMENT }}
-      object_key: ${{ github.event.repository.name }}/${{ matrix.LAMBDA_NAME }}.zip
+      object_key: ${{ matrix.LAMBDA_NAME }}.zip
       object_name: ${{ matrix.LAMBDA_NAME }}.zip
       role_name: GithubActionsRole-Write
 
