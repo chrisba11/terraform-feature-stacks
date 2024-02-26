@@ -89,7 +89,7 @@ jobs:
       matrix:
         LAMBDA_NAME:
           - DownloadImage
-          - ImageDownload
+          - ReverseImage
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__build_python_lambda.yml@v1
     with:
       aws_region: ${{ vars.AWS_REGION }}
@@ -108,7 +108,7 @@ jobs:
       matrix:
         LAMBDA_NAME:
           - DownloadImage
-          - ImageDownload
+          - ReverseImage
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__upload_s3_object.yml@v1
     with:
       aws_account_id: ${{ vars.DEV_ACCOUNT_ID }}
@@ -184,7 +184,8 @@ jobs:
       fail-fast: false
       matrix:
         LAMBDA_NAME:
-          - ImageDownload
+          - DownloadImage
+          - ReverseImage
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
