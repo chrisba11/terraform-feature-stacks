@@ -39,7 +39,9 @@ def lambda_handler(event, context):
         try:
             # get StatusCode from event object's body if exists, otherwise use 200
             body = json.loads(event.get('body', '{}'))
+            logger.debug(f'body = {body}')
             status_code = body.get('StatusCode', '200')
+            logger.debug(f'status_code = {status_code}')
         except Exception as e:
             error_message = str(e)
 
@@ -90,7 +92,6 @@ def lambda_handler(event, context):
             'statusCode': 200,
             'body': f'Image successfully uploaded to {bucket_name}/{object_key}'
         }
-
     except Exception as e:
         error_message = str(e)
 

@@ -22,9 +22,9 @@ module "download_lambda" {
   system_log_level      = var.lambda_system_log_level
 
   environment_variables = {
-    DESTINATION_BUCKET_NAME   = aws_s3_bucket.image.bucket
-    DESTINATION_BUCKET_REGION = aws_s3_bucket.image.region
-    PYTHON_LOG_LEVEL          = var.python_log_level
+    IMAGE_BUCKET_NAME   = aws_s3_bucket.image.bucket
+    IMAGE_BUCKET_REGION = aws_s3_bucket.image.region
+    PYTHON_LOG_LEVEL    = var.python_log_level
   }
 }
 
@@ -66,9 +66,9 @@ module "reverse_lambda" {
   system_log_level      = var.lambda_system_log_level
 
   environment_variables = {
-    DESTINATION_BUCKET_NAME   = aws_s3_bucket.image.bucket
-    DESTINATION_BUCKET_REGION = aws_s3_bucket.image.region
-    PYTHON_LOG_LEVEL          = var.python_log_level
+    IMAGE_BUCKET_NAME   = aws_s3_bucket.image.bucket
+    IMAGE_BUCKET_REGION = aws_s3_bucket.image.region
+    PYTHON_LOG_LEVEL    = var.python_log_level
   }
 }
 
