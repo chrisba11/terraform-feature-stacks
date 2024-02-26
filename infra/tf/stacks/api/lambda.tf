@@ -37,7 +37,7 @@ data "aws_iam_policy_document" "download_lambda" {
       "s3:PutObject",
     ]
 
-    resources = ["${aws_s3_bucket.images.arn}/DownloadImage/*"]
+    resources = ["${aws_s3_bucket.image.arn}/DownloadImage/*"]
   }
 }
 
