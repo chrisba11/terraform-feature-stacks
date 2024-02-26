@@ -113,6 +113,7 @@ jobs:
 
   tf-plan-prereqs:
     name: Terraform Plan - Prerequisite Stacks
+    if: ${{ needs.tf-apply-oidc.result != 'failure' }} # run if oidc is successful or skipped
     needs:
       - env-vars
       - tf-apply-oidc
@@ -138,19 +139,22 @@ jobs:
       working_directory: infra/tf/stacks/${{ matrix.STACK_NAME }}
 
 
+  tf-apply-prereqs-matrix:
+    name: Set TF Apply Matrix - Prerequisite Stacks
+    needs: [ tf-plan-prereqs ]
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply_matrix.yml@v1
+
+
   tf-apply-prereqs:
     name: Terraform Apply - Prerequisite Stacks
     needs: 
       - env-vars
-      - tf-plan-prereqs
-    # Using the matrix strategy here because the 'env' context is not available
-    # This gives us the ability to define the stack name once and use many times in the inputs,
-    # or define multiple stack names and have the job run against each stack.
+      - tf-apply-prereqs-matrix
     strategy:
+      # The matrix values are coming from the `tf-apply-prereqs-matrix` job. The matrix will only 
+      # consist of those stacks from the TF Plan job that showed changes and produced artifacts.
       fail-fast: false
-      matrix:
-        STACK_NAME:
-          - storage
+      matrix: ${{ fromJson(needs.tf-apply-prereqs-matrix.outputs.MATRIX) }}
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply.yml@v1
     with:
       aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
