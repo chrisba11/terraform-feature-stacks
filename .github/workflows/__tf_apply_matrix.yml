@@ -56,12 +56,12 @@ jobs:
                 MATRIX="${MATRIX%,}]}"
               else
                 # Ensure MATRIX is assigned the special skip value if no files are found.
-                MATRIX="{\"include\":[{\"SKIP\":\"ME\"}]}"
+                MATRIX="skip"
               fi
           else
               # If 'artifacts' directory doesn't exist, format MATRIX with special skip value.
               echo "No artifacts directory."
-              MATRIX="{\"include\":[{\"SKIP\":\"ME\"}]}"
+              MATRIX="skip"
           fi
 
           echo "MATRIX=$MATRIX"
