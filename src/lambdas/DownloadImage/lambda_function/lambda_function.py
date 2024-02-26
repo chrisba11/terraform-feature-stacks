@@ -38,7 +38,7 @@ def lambda_handler(event, context):
 
         try:
             # get StatusCode from event object's body if exists, otherwise use 200
-            body = json.loads(event['body'])
+            body = json.loads(event.get('body', '{}'))
             status_code = body.get('StatusCode', '200')
         except Exception as e:
             error_message = str(e)
@@ -53,7 +53,7 @@ def lambda_handler(event, context):
 
         # use status code from event to set URL and object name
         image_url = f'https://http.cat/images/{status_code}.jpg'
-        object_name = f'http_cat_{status_code}.jpg'
+        object_key = f'DownloadImage/http_cat_{status_code}.jpg'
 
         try:  # Download the image
             response = requests.get(image_url)
@@ -73,7 +73,7 @@ def lambda_handler(event, context):
             s3.put_object(
                 Body=image_data,
                 Bucket=bucket_name,
-                Key=object_name
+                Key=object_key
             )
         except Exception as e:
             error_message = str(e)
@@ -88,7 +88,7 @@ def lambda_handler(event, context):
 
         return {
             'statusCode': 200,
-            'body': f'Image successfully uploaded to {bucket_name}/{object_name}'
+            'body': f'Image successfully uploaded to {bucket_name}/{object_key}'
         }
 
     except Exception as e:
