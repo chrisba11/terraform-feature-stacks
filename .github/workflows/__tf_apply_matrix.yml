@@ -29,34 +29,40 @@ jobs:
 
       - name: Create Matrix
         id: create-matrix
-        working-directory: artifacts
         run: |
 
-          # Initialize the matrix string
-          MATRIX="{\"include\":["
-          FILES_FOUND=false
+          # Check if the 'artifacts' directory exists
+          if [ -d "artifacts" ]; then
+              cd artifacts
+              # Initialize the matrix string
+              MATRIX="{\"include\":["
+              FILES_FOUND=false
 
-          # Run through list of files ending with '.tfplan'.
-          for FILE in *.tfplan; do
-            # Check if the globbing found any files by checking if the file exists.
-            if [ -f "$FILE" ]; then
-              FILES_FOUND=true
-              # Extract the STACK_NAME from the file name.
-              STACK_NAME=$(basename "$FILE" .tfplan | sed 's/.*-\(.*\)$/\1/')
-              # Append the extracted STACK_NAME to the MATRIX string.
-              MATRIX="${MATRIX}{\"STACK_NAME\":\"${STACK_NAME}\"},"
-            fi
-          done
+              # Run through list of files ending with '.tfplan'.
+              for FILE in *.tfplan; do
+                # Check if the globbing found any files by checking if the file exists.
+                if [ -f "$FILE" ]; then
+                  FILES_FOUND=true
+                  # Extract the STACK_NAME from the file name.
+                  STACK_NAME=$(basename "$FILE" .tfplan | sed 's/.*-\(.*\)$/\1/')
+                  # Append the extracted STACK_NAME to the MATRIX string.
+                  MATRIX="${MATRIX}{\"STACK_NAME\":\"${STACK_NAME}\"},"
+                fi
+              done
 
-          # Check if any files were found and processed.
-          if [ "$FILES_FOUND" = true ]; then
-            # Remove the trailing comma from the last entry.
-            MATRIX="${MATRIX%,}]}"
+              # Check if any files were found and processed.
+              if [ "$FILES_FOUND" = true ]; then
+                # Remove the trailing comma from the last entry.
+                MATRIX="${MATRIX%,}]}"
+              else
+                # Ensure MATRIX is properly formatted as an empty matrix if no files are found.
+                MATRIX="{\"include\":[]}"
+              fi
           else
-            # Ensure MATRIX is properly formatted as an empty matrix if no files are found.
-            MATRIX="{\"include\":[]}"
+              # If 'artifacts' directory doesn't exist, format MATRIX as an empty matrix.
+              echo "No artifacts directory."
+              MATRIX="{\"include\":[]}"
           fi
 
           echo "MATRIX=$MATRIX"
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
-
