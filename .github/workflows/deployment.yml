@@ -113,10 +113,7 @@ jobs:
 
   tf-plan-prereqs:
     name: Terraform Plan - Prerequisite Stacks
-    if: |
-      always() &&
-      needs.env-vars.result == 'success' &&
-      needs.tf-apply-oidc.result != 'failure'
+    if: always() && needs.tf-apply-oidc.result != 'failure'
     needs:
       - env-vars
       - tf-apply-oidc
@@ -192,9 +189,11 @@ jobs:
 
   deploy:
     name: Deploy Lambda Package
+    if: always() && needs.tf-apply-prereqs.result != 'failure'
     needs:
       - env-vars
       - build
+      - tf-apply-prereqs
     strategy:
       fail-fast: false
       matrix:
@@ -213,6 +212,7 @@ jobs:
 
   tf-plan:
     name: Terraform Plan - Dependent Stacks
+    if: always() && needs.tf-apply-prereqs.result != 'failure'
     needs:
       - env-vars
       - deploy
