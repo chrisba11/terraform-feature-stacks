@@ -113,7 +113,10 @@ jobs:
 
   tf-plan-prereqs:
     name: Terraform Plan - Prerequisite Stacks
-    if: (needs.tf-apply-oidc.result != 'failure' && needs.env-vars.result == 'success')
+    if: |
+      always() &&
+      needs.env-vars.result == 'success' &&
+      needs.tf-apply-oidc.result != 'failure'
     needs:
       - env-vars
       - tf-apply-oidc
