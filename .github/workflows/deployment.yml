@@ -78,59 +78,47 @@ jobs:
     name: Terraform Plan - OIDC
     needs:
       - env-vars
-    # using the matrix strategy here because the 'env' context is not available
-    # this gives us the ability to define the stack name once and use many times in the inputs
-    strategy:
-      fail-fast: false
-      matrix:
-        STACK_NAME:
-          - oidc
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_plan.yml@v1
     with:
       aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
       environment: ${{ needs.env-vars.outputs.ENVIRONMENT }}
       role_name: GithubActionsRole-ReadOnly
-      stack_name: ${{ matrix.STACK_NAME }}
+      stack_name: oidc
       terraform_version: ${{ needs.env-vars.outputs.TF_VERSION }}
       tf_backend_name: ${{ vars.TF_BACKEND_PREFIX }}-${{ needs.env-vars.outputs.ENVIRONMENT }}
-      tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.STACK_NAME }}.tfstate
+      tf_backend_key: ${{ github.event.repository.name }}/oidc.tfstate
       tfvars_path: ./environments/${{ needs.env-vars.outputs.ENVIRONMENT }}.tfvars
-      working_directory: infra/tf/stacks/${{ matrix.STACK_NAME }}
+      working_directory: infra/tf/stacks/oidc
 
 
   tf-apply-oidc:
     name: Terraform Apply - OIDC
+    if: ${{ needs.tf-plan-oidc.outputs.CHANGES_DETECTED == 'true' }}
     needs: 
       - env-vars
       - tf-plan-oidc
-    # using the matrix strategy here because the 'env' context is not available
-    # this gives us the ability to define the stack name once and use many times in the inputs
-    strategy:
-      fail-fast: false
-      matrix:
-        STACK_NAME:
-          - oidc
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply.yml@v1
     with:
       aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
       aws_region: ${{ vars.AWS_REGION }}
       environment: ${{ needs.env-vars.outputs.ENVIRONMENT }}
       role_name: GithubActionsRole-Write
-      stack_name: ${{ matrix.STACK_NAME }}
+      stack_name: oidc
       terraform_version: ${{ needs.env-vars.outputs.TF_VERSION }}
       tf_backend_name: ${{ vars.TF_BACKEND_PREFIX }}-${{ needs.env-vars.outputs.ENVIRONMENT }}
-      tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.STACK_NAME }}.tfstate
-      working_directory: infra/tf/stacks/${{ matrix.STACK_NAME }}
+      tf_backend_key: ${{ github.event.repository.name }}/oidc.tfstate
+      working_directory: infra/tf/stacks/oidc
 
 
-  tf-plan-storage:
-    name: Terraform Plan - Storage
+  tf-plan-prereqs:
+    name: Terraform Plan - Prerequisite Stacks
     needs:
       - env-vars
       - tf-apply-oidc
-    # using the matrix strategy here because the 'env' context is not available
-    # this gives us the ability to define the stack name once and use many times in the inputs
+    # Using the matrix strategy here because the 'env' context is not available
+    # This gives us the ability to define the stack name once and use many times in the inputs,
+    # or define multiple stack names and have the job run against each stack.
     strategy:
       fail-fast: false
       matrix:
@@ -150,13 +138,14 @@ jobs:
       working_directory: infra/tf/stacks/${{ matrix.STACK_NAME }}
 
 
-  tf-apply-storage:
-    name: Terraform Apply - Storage
+  tf-apply-prereqs:
+    name: Terraform Apply - Prerequisite Stacks
     needs: 
       - env-vars
       - tf-plan-storage
-    # using the matrix strategy here because the 'env' context is not available
-    # this gives us the ability to define the stack name once and use many times in the inputs
+    # Using the matrix strategy here because the 'env' context is not available
+    # This gives us the ability to define the stack name once and use many times in the inputs,
+    # or define multiple stack names and have the job run against each stack.
     strategy:
       fail-fast: false
       matrix:
@@ -181,8 +170,6 @@ jobs:
 
   build:
     name: Build Lambda Package
-    # using the matrix strategy here because the 'env' context is not available
-    # this gives us the ability to define the lambda name once and use many times in the inputs
     strategy:
       fail-fast: false
       matrix:
@@ -218,14 +205,12 @@ jobs:
 
 
   tf-plan:
-    name: Terraform Plan
+    name: Terraform Plan - Dependent Stacks
     needs:
       - env-vars
       - deploy
       - tf-apply-oidc
-      - tf-apply-storage
-    # using the matrix strategy here because the 'env' context is not available
-    # this gives us the ability to define the stack name once and use many times in the inputs
+      - tf-apply-prereqs
     strategy:
       fail-fast: false
       matrix:
@@ -252,15 +237,13 @@ jobs:
 
 
   tf-apply:
-    name: Terraform Apply
+    name: Terraform Apply - Dependent Stacks
     needs: 
       - env-vars
       - tf-apply-matrix
-    # Using the matrix strategy here because the 'env' context is not available.
-    # This gives us the ability to define the stack name once and use many times in the inputs.
-    # The matrix values are coming from the `tf-apply-matrix` job.
-    # The matrix will only consist of those stacks from the TF Plan job that produced artifacts.
     strategy:
+      # The matrix values are coming from the `tf-apply-matrix` job. The matrix will only consist
+      # of those stacks from the TF Plan job that showed changes and produced artifacts.
       fail-fast: false
       matrix: ${{ fromJson(needs.tf-apply-matrix.outputs.MATRIX) }}
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply.yml@v1

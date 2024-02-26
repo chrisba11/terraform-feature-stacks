@@ -70,6 +70,11 @@ on:
         required: true
         type: string
 
+    outputs:
+      CHANGES_DETECTED:
+        description: Boolean string to indicate if TF Plan found changes to apply. Do not use in conditional expression for a TF Apply job if the TF Plan job is using a matrix with multiple stacks. The value will be overwritten by the last item in the matrix to finish running. See __tf_apply_matrix.yml for a better trigger.
+        value: ${{ jobs.tf-plan.outputs.CHANGES_DETECTED }}
+
 env:
   ARTIFACT_NAME: ${{ inputs.feature_tag != '' && inputs.feature_tag || inputs.environment }}-${{ inputs.stack_name }}.tfplan
   # latest commit on branch triggering workflow (helps avoid using merge commit)
@@ -81,6 +86,8 @@ jobs:
     name: Terraform Plan
     runs-on: ubuntu-latest
     concurrency: ${{ inputs.tf_backend_key }}-${{ inputs.environment }}
+    outputs:
+      CHANGES_DETECTED: ${{ steps.plan.outputs.CHANGES }}
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4

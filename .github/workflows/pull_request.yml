@@ -81,8 +81,8 @@ jobs:
     name: Build Lambda Package
     needs:
       - env-vars
-    # using the matrix strategy here because the 'env' context is not available
-    # this gives us the ability to define the lambda name once and use many times in the inputs
+    # Using the matrix strategy here because the 'env' context is not available.
+    # This gives us the ability to define the lambda name once and use many times in the inputs.
     strategy:
       fail-fast: false
       matrix:
@@ -121,8 +121,6 @@ jobs:
     needs:
       - env-vars
       - deploy
-    # using the matrix strategy here because the 'env' context is not available
-    # this gives us the ability to define the stack name once and use many times in the inputs
     strategy:
       fail-fast: false
       matrix:
@@ -153,11 +151,9 @@ jobs:
     needs:
       - env-vars
       - tf-apply-matrix
-    # Using the matrix strategy here because the 'env' context is not available.
-    # This gives us the ability to define the stack name once and use many times in the inputs.
-    # The matrix values are coming from the `tf-apply-matrix` job.
-    # The matrix will only consist of those stacks from the TF Plan job that produced artifacts.
     strategy:
+      # The matrix values are coming from the `tf-apply-matrix` job. The matrix will only consist
+      # of those stacks from the TF Plan job that showed changes and produced artifacts.
       fail-fast: false
       matrix: ${{ fromJson(needs.tf-apply-matrix.outputs.MATRIX) }}
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply.yml@v1
