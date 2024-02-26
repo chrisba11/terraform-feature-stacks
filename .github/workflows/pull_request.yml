@@ -151,7 +151,7 @@ jobs:
 
   tf-apply:
     name: Terraform Apply
-    if: ${{ matrix.STACK_NAME != 'SKIP' }}
+    if: ${{ needs.tf-apply-matrix.outputs.MATRIX != '{\"include\":[{\"SKIP\":\"ME\"}]}' }}
     needs:
       - env-vars
       - tf-apply-matrix

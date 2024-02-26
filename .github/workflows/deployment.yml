@@ -147,6 +147,7 @@ jobs:
 
   tf-apply-prereqs:
     name: Terraform Apply - Prerequisite Stacks
+    if: ${{ needs.tf-apply-prereqs-matrix.outputs.MATRIX != '{\"include\":[{\"SKIP\":\"ME\"}]}' }}
     needs: 
       - env-vars
       - tf-apply-prereqs-matrix
@@ -246,7 +247,7 @@ jobs:
 
   tf-apply:
     name: Terraform Apply - Dependent Stacks
-    if: ${{ matrix.STACK_NAME != 'SKIP' }}
+    if: ${{ needs.tf-apply-matrix.outputs.MATRIX != '{\"include\":[{\"SKIP\":\"ME\"}]}' }}
     needs: 
       - env-vars
       - tf-apply-matrix
