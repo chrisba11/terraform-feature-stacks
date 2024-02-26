@@ -216,7 +216,6 @@ jobs:
     needs:
       - env-vars
       - deploy
-      - tf-apply-oidc
       - tf-apply-prereqs
     strategy:
       fail-fast: false
@@ -238,7 +237,7 @@ jobs:
 
 
   tf-apply-matrix:
-    name: Set TF Apply Matrix
+    name: Set TF Apply Matrix - Dependent Stacks
     needs: [ tf-plan ]
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply_matrix.yml@v1
 
