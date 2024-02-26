@@ -81,7 +81,7 @@ data "aws_iam_policy_document" "reverse_lambda" {
       "s3:GetObject",
     ]
 
-    resources = ["${aws_s3_bucket.image.arn}/*"]
+    resources = ["${aws_s3_bucket.image.arn}/DownloadImage/*"]
   }
 
   statement {
@@ -92,6 +92,6 @@ data "aws_iam_policy_document" "reverse_lambda" {
       "s3:PutObject",
     ]
 
-    resources = ["${aws_s3_bucket.image.arn}/${local.reverse_lambda_name}/*"]
+    resources = ["${aws_s3_bucket.image.arn}/ReverseImage/*"]
   }
 }
