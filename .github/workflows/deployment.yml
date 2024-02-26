@@ -94,7 +94,7 @@ jobs:
       stack_name: ${{ matrix.STACK_NAME }}
       terraform_version: ${{ needs.env-vars.outputs.TF_VERSION }}
       tf_backend_name: ${{ vars.TF_BACKEND_PREFIX }}-${{ needs.env-vars.outputs.ENVIRONMENT }}
-      tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.STACK_NAME }}
+      tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.STACK_NAME }}.tfstate
       tfvars_path: ./environments/${{ needs.env-vars.outputs.ENVIRONMENT }}.tfvars
       working_directory: infra/tf/stacks/${{ matrix.STACK_NAME }}
 
@@ -120,7 +120,7 @@ jobs:
       stack_name: ${{ matrix.STACK_NAME }}
       terraform_version: ${{ needs.env-vars.outputs.TF_VERSION }}
       tf_backend_name: ${{ vars.TF_BACKEND_PREFIX }}-${{ needs.env-vars.outputs.ENVIRONMENT }}
-      tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.STACK_NAME }}
+      tf_backend_key: ${{ github.event.repository.name }}/${{ matrix.STACK_NAME }}.tfstate
       working_directory: infra/tf/stacks/${{ matrix.STACK_NAME }}
 
 
@@ -222,6 +222,8 @@ jobs:
     needs:
       - env-vars
       - deploy
+      - tf-apply-oidc
+      - tf-apply-storage
     # using the matrix strategy here because the 'env' context is not available
     # this gives us the ability to define the stack name once and use many times in the inputs
     strategy:
