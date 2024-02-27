@@ -11,7 +11,22 @@ resource "aws_api_gateway_deployment" "default" {
   rest_api_id = aws_api_gateway_rest_api.default.id
 
   triggers = {
-    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.default.body))
+    # Trigger deployment when relevant attributes change
+    download_resource = "${jsonencode({
+      path_part        = aws_api_gateway_resource.download.path_part
+      http_method      = aws_api_gateway_method.download.http_method
+      authorization    = aws_api_gateway_method.download.authorization
+      integration_uri  = aws_api_gateway_integration.download.uri
+      integration_type = aws_api_gateway_integration.download.type
+    })}"
+
+    reverse_resource = "${jsonencode({
+      path_part        = aws_api_gateway_resource.reverse.path_part
+      http_method      = aws_api_gateway_method.reverse.http_method
+      authorization    = aws_api_gateway_method.reverse.authorization
+      integration_uri  = aws_api_gateway_integration.reverse.uri
+      integration_type = aws_api_gateway_integration.reverse.type
+    })}"
   }
 
   lifecycle {

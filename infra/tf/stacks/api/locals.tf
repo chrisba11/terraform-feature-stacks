@@ -26,7 +26,7 @@ locals {
   apigw_arn_prefix = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.default.id}"
 
   lambda_package_bucket_name = "${local.bucket_prefix}-lambda-packages-${var.environment}"
-  image_bucket_name          = local.is_feature_stack ? "${local.bucket_prefix}-images-${var.feature_tag}" : "${local.bucket_prefix}-images"
+  image_bucket_name          = local.is_feature_stack ? "${local.bucket_prefix}-images-${var.feature_tag}" : "${local.bucket_prefix}-images-${var.environment}"
 
   download_lambda_name        = local.is_feature_stack ? "DownloadImage_${var.feature_tag}" : "DownloadImage"
   download_lambda_package_key = local.is_feature_stack ? "feature/${local.download_lambda_name}.zip" : "${local.download_lambda_name}.zip"
