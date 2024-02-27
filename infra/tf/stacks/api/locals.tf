@@ -31,6 +31,6 @@ locals {
   download_lambda_name        = local.is_feature_stack ? "DownloadImage_${var.feature_tag}" : "DownloadImage_${var.environment}"
   download_lambda_package_key = local.is_feature_stack ? "feature/${local.download_lambda_name}.zip" : "${local.download_lambda_name}.zip"
 
-  reverse_lambda_name        = local.is_feature_stack ? "ReverseImage_${var.feature_tag}" : "ReverseImage"
+  reverse_lambda_name        = local.is_feature_stack ? "ReverseImage_${var.feature_tag}" : "ReverseImage_${var.environment}"
   reverse_lambda_package_key = local.is_feature_stack ? "feature/${local.reverse_lambda_name}.zip" : "${local.reverse_lambda_name}.zip"
 }
