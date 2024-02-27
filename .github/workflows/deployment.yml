@@ -113,7 +113,7 @@ jobs:
 
   tf-plan-prereqs:
     name: Terraform Plan - Prerequisite Stacks
-    if: always() && needs.tf-apply-oidc.result != 'failure'
+    if: ${{ !cancelled() && needs.tf-apply-oidc.result != 'failure' }}
     needs:
       - env-vars
       - tf-apply-oidc
@@ -141,13 +141,14 @@ jobs:
 
   tf-apply-prereqs-matrix:
     name: Set TF Apply Matrix - Prerequisite Stacks
+    if: ${{ !cancelled() && needs.tf-plan-prereqs.result != 'failure' }}
     needs: [ tf-plan-prereqs ]
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply_matrix.yml@v1
 
 
   tf-apply-prereqs:
     name: Terraform Apply - Prerequisite Stacks
-    if: ${{ needs.tf-apply-prereqs-matrix.outputs.MATRIX != 'skip' }}
+    if: ${{ !cancelled() && needs.tf-apply-prereqs-matrix.outputs.MATRIX != 'skip' }}
     needs: 
       - env-vars
       - tf-apply-prereqs-matrix
@@ -210,7 +211,7 @@ jobs:
       aws_region: ${{ vars.AWS_REGION }}
       bucket_name: ${{ vars.LAMBDA_PKG_BUCKET_PREFIX }}-${{ needs.env-vars.outputs.ENVIRONMENT }}
       environment: ${{ needs.env-vars.outputs.ENVIRONMENT }}
-      object_key: ${{ matrix.LAMBDA_NAME }}.zip
+      object_key: ${{ matrix.LAMBDA_NAME }}_${{ needs.env-vars.outputs.ENVIRONMENT }}.zip
       object_name: ${{ matrix.LAMBDA_NAME }}.zip
       role_name: GithubActionsRole-Write
 
