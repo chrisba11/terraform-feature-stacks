@@ -18,6 +18,8 @@ infra/
     │   │   └── Terraform configuration files
     │   ├── oidc/
     │   │   └── Terraform configuration files
+    │   ├── storage/
+    │   │   └── Terraform configuration files
     │   └── vpc/
     │       └── Terraform configuration files
     └── .terraform-docs.yml
@@ -45,7 +47,7 @@ By embracing this stacked approach in the `tf/stacks` directory, we achieve a mo
 
 #### Terraform Documentation Automation
 
-To ensure up-to-date and consistent documentation of our Terraform stacks, we employ the `terraform-docs` package. A script located at `../scripts/update_tf_docs.sh` automates the process of generating documentation for each stack. This script scans through the stacks in the `tf/stacks` directory and generates documentation accordingly, leveraging the configuration defined in `.terraform-docs.yml`.
+To ensure up-to-date and consistent documentation of our Terraform stacks, we employ the `terraform-docs` package. A script located at [../scripts/update-tf-docs.sh](../scripts/update-tf-docs.sh) automates the process of generating documentation for each stack. This script scans through the stacks in the `tf/stacks` directory and generates documentation accordingly, leveraging the configuration defined in [./tf/.terraform-docs.yml](./tf/.terraform-docs.yml).
 
 ##### `update_tf_docs.sh` Script
 
@@ -61,7 +63,7 @@ This automation ensures our Terraform documentation is always aligned with the c
 
 1. **CloudFormation Initialization**: Use the `cfn` directory to set up Terraform state management resources within AWS.
 2. **Terraform Implementation**: Manage and provision the majority of infrastructure via the Terraform stacks in the `tf/stacks` directory.
-3. **Documentation Updates**: Regularly run the `update_tf_docs.sh` script to keep Terraform documentation in sync with the current configurations.
+3. **Documentation Updates**: Regularly run the `update-tf-docs.sh` script to keep Terraform documentation in sync with the current configurations.
 
 ## Best Practices
 

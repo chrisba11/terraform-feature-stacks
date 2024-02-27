@@ -147,6 +147,7 @@ jobs:
 
   tf-apply-prereqs:
     name: Terraform Apply - Prerequisite Stacks
+    if: ${{ needs.tf-apply-prereqs-matrix.outputs.MATRIX != 'skip' }}
     needs: 
       - env-vars
       - tf-apply-prereqs-matrix
@@ -168,17 +169,14 @@ jobs:
       working_directory: infra/tf/stacks/${{ matrix.STACK_NAME }}
 
 
-  #####################################################
-  # These jobs must run after the preceding TF stacks #
-  #####################################################
-
   build:
     name: Build Lambda Package
     strategy:
       fail-fast: false
       matrix:
         LAMBDA_NAME:
-          - ImageDownload
+          - DownloadImage
+          - ReverseImage
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__build_python_lambda.yml@v1
     with:
       aws_region: ${{ vars.AWS_REGION }}
@@ -187,9 +185,15 @@ jobs:
       src_directory: src/lambdas/${{ matrix.LAMBDA_NAME }}
 
 
+  #####################################################
+  # These jobs must run after the preceding TF stacks #
+  #####################################################
+
   deploy:
     name: Deploy Lambda Package
-    if: always() && needs.tf-apply-prereqs.result != 'failure'
+    if: |
+      ${{ !cancelled() && needs.build.result == 'success' &&
+      needs.tf-apply-prereqs.result != 'failure' }}
     needs:
       - env-vars
       - build
@@ -198,7 +202,8 @@ jobs:
       fail-fast: false
       matrix:
         LAMBDA_NAME:
-          - ImageDownload
+          - DownloadImage
+          - ReverseImage
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__upload_s3_object.yml@v1
     with:
       aws_account_id: ${{ needs.env-vars.outputs.AWS_ACCOUNT_ID }}
@@ -212,7 +217,9 @@ jobs:
 
   tf-plan:
     name: Terraform Plan - Dependent Stacks
-    if: always() && needs.tf-apply-prereqs.result != 'failure'
+    if: |
+      ${{ !cancelled() && needs.deploy.result == 'success' &&
+      needs.tf-apply-prereqs.result != 'failure' }}
     needs:
       - env-vars
       - deploy
@@ -238,12 +245,14 @@ jobs:
 
   tf-apply-matrix:
     name: Set TF Apply Matrix - Dependent Stacks
+    if: ${{ !cancelled() && needs.tf-plan.result != 'failure' }}
     needs: [ tf-plan ]
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply_matrix.yml@v1
 
 
   tf-apply:
     name: Terraform Apply - Dependent Stacks
+    if: ${{ !cancelled() && needs.tf-apply-matrix.outputs.MATRIX != 'skip' }}
     needs: 
       - env-vars
       - tf-apply-matrix
@@ -267,7 +276,9 @@ jobs:
 
   update:
     name: Update Lambda
-    if: always() && needs.tf-apply.result != 'failure'
+    if: |
+      ${{ !cancelled() && needs.deploy.result == 'success' && 
+      needs.tf-apply.result != 'failure' }}
     runs-on: ubuntu-latest
     needs: 
       - env-vars
@@ -277,7 +288,8 @@ jobs:
       fail-fast: false
       matrix:
         LAMBDA_NAME:
-          - ImageDownload
+          - DownloadImage
+          - ReverseImage
     steps:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
