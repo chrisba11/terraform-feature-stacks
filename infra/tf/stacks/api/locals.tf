@@ -21,14 +21,14 @@ locals {
 
   bucket_prefix = "${replace(lower(local.default_tags["SCM_Org"]), "_", "-")}-${local.app_name_lower}"
 
-  api_name         = local.is_feature_stack ? "${var.api_name}_${var.feature_tag}" : var.api_name
+  api_name         = local.is_feature_stack ? "${var.api_name}_${var.feature_tag}" : "${var.api_name}_${var.environment}"
   api_stage_name   = local.is_feature_stack ? var.feature_tag : var.environment
   apigw_arn_prefix = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.default.id}"
 
   lambda_package_bucket_name = "${local.bucket_prefix}-lambda-packages-${var.environment}"
   image_bucket_name          = local.is_feature_stack ? "${local.bucket_prefix}-images-${var.feature_tag}" : "${local.bucket_prefix}-images-${var.environment}"
 
-  download_lambda_name        = local.is_feature_stack ? "DownloadImage_${var.feature_tag}" : "DownloadImage"
+  download_lambda_name        = local.is_feature_stack ? "DownloadImage_${var.feature_tag}" : "DownloadImage_${var.environment}"
   download_lambda_package_key = local.is_feature_stack ? "feature/${local.download_lambda_name}.zip" : "${local.download_lambda_name}.zip"
 
   reverse_lambda_name        = local.is_feature_stack ? "ReverseImage_${var.feature_tag}" : "ReverseImage"
