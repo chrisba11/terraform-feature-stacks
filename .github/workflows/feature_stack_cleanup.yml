@@ -69,6 +69,66 @@ jobs:
           echo "tf_version=${TF_VERSION}" >> $GITHUB_OUTPUT
 
 
+  empty-bucket:
+    name: Empty Feature Bucket
+    runs-on: ubuntu-latest
+    needs:
+      - env-vars
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.env-vars.outputs.FEATURE_TAG }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.DEV_ACCOUNT_ID }}:role/GithubActionsRole-Write
+          aws-region: ${{ vars.AWS_REGION }}
+          role-duration-seconds: 900
+          role-session-name: ${{ github.event.repository.name }}+run=${{ github.run_id }}-${{ github.run_number }}+${{ github.triggering_actor }}
+
+      - name: Delete Bucket Objects
+        run: |
+
+          BUCKET_NAME="chrisba11-example-images-${{ needs.env-vars.outputs.FEATURE_TAG }}"
+
+          while : ; do
+            # Generate the payload for delete-objects (up to 1000 items)
+            PAYLOAD=$(
+              aws s3api list-object-versions \
+                --bucket "$BUCKET_NAME" \
+                --output json \
+                --max-items 1000 \
+                --query '{Objects: Versions[].{Key: Key, VersionId: VersionId}}' | \
+                  jq -c '{Objects: (.Objects + ([.DeleteMarkers[]? | {Key, VersionId}] // []))}'
+            )
+
+            PAYLOAD_LENGTH=$(echo $PAYLOAD | jq '.Objects | length')
+            echo "Number of objects to delete: $PAYLOAD_LENGTH"
+
+            # Check if PAYLOAD's Objects list is empty
+            if [ "$PAYLOAD" = '{"Objects":[]}' ]; then
+              echo "No more versions or delete markers to delete."
+              break
+            fi
+
+            # If PAYLOAD is not empty, write to a file
+            echo "$PAYLOAD" > delete.json
+
+            # Perform the bulk delete (can only handle 1000 items at a time) and suppress output
+            if ! aws s3api delete-objects \
+              --bucket "$BUCKET_NAME" \
+              --delete file://delete.json > /dev/null 2>&1
+            then
+              echo "Error: Failed to delete objects."
+              exit 1
+            fi
+
+            echo -e "Successfully deleted $PAYLOAD_LENGTH objects from $BUCKET_NAME.\n"
+          done
+
+
   tf-destroy:
     name: Terraform Destroy
     needs: 
@@ -94,12 +154,33 @@ jobs:
       working_directory: infra/tf/stacks/${{ matrix.STACK_NAME }}
 
 
+  delete-lambda-package:
+    name: Delete Lambda Package from S3
+    needs:
+      - env-vars
+      - tf-destroy
+    strategy:
+      fail-fast: false
+      matrix:
+        LAMBDA_NAME:
+          - DownloadImage
+          - ReverseImage
+    uses: chrisba11/terraform-feature-stacks/.github/workflows/__delete_s3_object.yml@v1
+    with:
+      aws_account_id: ${{ vars.DEV_ACCOUNT_ID }}
+      aws_region: ${{ vars.AWS_REGION }}
+      object_key: feature/${{ matrix.LAMBDA_NAME }}_${{ needs.env-vars.outputs.FEATURE_TAG }}.zip
+      role_name: GithubActionsRole-Write
+      s3_bucket_name: ${{ vars.LAMBDA_PKG_BUCKET_PREFIX }}-dev
+
+
   delete-feature-git-tag:
     name: Delete Feature Git Tag
     runs-on: ubuntu-latest
     needs:
       - env-vars
       - tf-destroy
+      - delete-lambda-package
     permissions:
       contents: write
     steps:
