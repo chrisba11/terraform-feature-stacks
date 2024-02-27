@@ -144,6 +144,8 @@ jobs:
     if: ${{ !cancelled() && needs.tf-plan-prereqs.result != 'failure' }}
     needs: [ tf-plan-prereqs ]
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply_matrix.yml@v1
+    with:
+      stacks_to_ignore: oidc
 
 
   tf-apply-prereqs:
@@ -249,6 +251,8 @@ jobs:
     if: ${{ !cancelled() && needs.tf-plan.result != 'failure' }}
     needs: [ tf-plan ]
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply_matrix.yml@v1
+    with:
+      stacks_to_ignore: oidc,storage
 
 
   tf-apply:

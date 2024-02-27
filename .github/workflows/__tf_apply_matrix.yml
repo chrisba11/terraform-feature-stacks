@@ -2,6 +2,12 @@ name: __tf_apply_matrix.yml
 
 on:
   workflow_call:
+    inputs:
+      stacks_to_ignore:
+        description: Comma-separated list of Terraform stacks to ignore when creating matrix.
+        required: false
+        type: string
+
     outputs:
       MATRIX:
         description: A matrix object that includes all Terraform stacks with planned changes.
@@ -38,15 +44,24 @@ jobs:
               MATRIX="{\"include\":["
               FILES_FOUND=false
 
+              # Remove any spaces from input string
+              STACKS_TO_IGNORE="${INPUT_STACKS_TO_IGNORE// /}"
+
+              # Read stacks to ignore into an array
+              IFS=',' read -ra IGNORED_STACKS_ARRAY <<< "${STACKS_TO_IGNORE}"
+
               # Run through list of files ending with '.tfplan'.
               for FILE in *.tfplan; do
                 # Check if the globbing found any files by checking if the file exists.
                 if [ -f "$FILE" ]; then
-                  FILES_FOUND=true
-                  # Extract the STACK_NAME from the file name.
+                  # Extract the stack name from the file name.
                   STACK_NAME=$(basename "$FILE" .tfplan | sed 's/.*-\(.*\)$/\1/')
-                  # Append the extracted STACK_NAME to the MATRIX string.
-                  MATRIX="${MATRIX}{\"STACK_NAME\":\"${STACK_NAME}\"},"
+
+                  # If the stack should not be ignored, add it to the matrix.
+                  if [[ ! " ${IGNORED_STACKS_ARRAY[@]} " =~ " ${STACK_NAME} " ]]; then
+                    FILES_FOUND=true
+                    MATRIX="${MATRIX}{\"STACK_NAME\":\"${STACK_NAME}\"},"
+                  fi
                 fi
               done
 

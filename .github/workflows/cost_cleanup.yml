@@ -48,22 +48,19 @@ jobs:
         id: set-outputs
         run: |
 
-          ENVS="${{ github.event.inputs.environments }}"
-          STACKS="${{ github.event.inputs.stack_names }}"
-
           # set resource targets value based on event triggering workflow
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             # for manual runs, grab list from input
-            RESOURCE_TARGETS="${{ github.event.inputs.resource_targets }}"
+            RESOURCE_TARGETS="${INPUT_RESOURCE_TARGETS}"
           elif [[ "${{ github.event_name }}" == "schedule" ]]; then
             # for scheduled runs, use predefined lists
             RESOURCE_TARGETS="${VPC_TARGETS}"
           fi
 
           # Remove any spaces
-          ENVS="${ENVS// /}"
+          ENVS="${INPUT_ENVIRONMENTS// /}"
           RESOURCE_TARGETS="${RESOURCE_TARGETS// /}"
-          STACKS="${STACKS// /}"
+          STACKS="${INPUT_STACK_NAMES// /}"
 
           # Split environments and stack names into arrays
           IFS=',' read -ra ENV_ARRAY <<< "$ENVS"
