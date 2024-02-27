@@ -106,7 +106,9 @@ jobs:
           fi
 
           echo "MATCHES = ${matches}"
+          echo "LOCAL_HASH = ${LOCAL_HASH}"
           echo "MATCHES=${matches}" >> $GITHUB_OUTPUT
+          echo "LOCAL_HASH"=${LOCAL_HASH} >> $GITHUB_OUTPUT
 
       - name: Upload to S3
         if: steps.md5-check.outputs.MATCHES == 'false'
@@ -119,4 +121,4 @@ jobs:
           # Upload with custom metadata
           aws s3 cp "${{ inputs.object_name }}" \
             "s3://${{ inputs.bucket_name }}/${{ inputs.object_key }}" \
-            --metadata content-md5="$LOCAL_HASH"
+            --metadata content-md5="${{ steps.md5-check.outputs.LOCAL_HASH }}"
