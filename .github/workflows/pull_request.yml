@@ -175,7 +175,7 @@ jobs:
 
   update:
     name: Update Lambda
-    if: always() && needs.tf-apply.result != 'failure'
+    if: ${{ !cancelled() && needs.tf-apply.result != 'failure' }}
     runs-on: ubuntu-latest
     needs: 
       - env-vars
@@ -208,6 +208,7 @@ jobs:
 
   create-feature-git-tag:
     name: Create Git Tag for Feature
+    if: ${{ !cancelled() && needs.update.result != 'failure' }}
     runs-on: ubuntu-latest
     needs:
       - env-vars
