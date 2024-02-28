@@ -77,8 +77,24 @@ jobs:
         working-directory: artifacts
         run: |
 
-          # Calculate the local file's hash
-          LOCAL_HASH=$(md5sum "${{ inputs.object_name }}" | awk '{ print $1 }')
+          # Extract the contents of the zip file
+          unzip -o "${{ inputs.object_name }}" -d extracted_content
+
+          # Calculate the local file's hash.
+          # Using the md5 hash of the zip file will result in a different hash every time.
+
+          # Instead, find all regular files within the 'extracted_content' directory
+          # and calculate their MD5 hashes using 'md5sum'.
+          # The '+' at the end of the command ensures efficient execution
+          # by passing multiple filenames at once.
+          # Sort the output based on the second column, which contains file paths.
+          # Calculate the MD5 hash of the concatenated output from the previous 'md5sum' commands.
+          # This represents the combined hash of all files' contents.
+          # Extract the first column of the output, which contains the hash value.
+          LOCAL_HASH=$(find extracted_content -type f -exec md5sum {} + | \
+                      sort -k 2 | \
+                      md5sum | \
+                      awk '{ print $1 }')
 
           # Allow non-zero exit code without failure
           set +e
