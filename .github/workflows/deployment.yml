@@ -141,7 +141,7 @@ jobs:
 
   tf-apply-prereqs-matrix:
     name: Set TF Apply Matrix - Prerequisite Stacks
-    if: ${{ !cancelled() && needs.tf-plan-prereqs.result != 'failure' }}
+    if: ${{ !cancelled() && needs.tf-plan-prereqs.result == 'success' }}
     needs: [ tf-plan-prereqs ]
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply_matrix.yml@v1
     with:
@@ -248,7 +248,7 @@ jobs:
 
   tf-apply-matrix:
     name: Set TF Apply Matrix - Dependent Stacks
-    if: ${{ !cancelled() && needs.tf-plan.result != 'failure' }}
+    if: ${{ !cancelled() && needs.tf-plan.result == 'success' }}
     needs: [ tf-plan ]
     uses: chrisba11/terraform-feature-stacks/.github/workflows/__tf_apply_matrix.yml@v1
     with:
