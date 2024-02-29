@@ -46,7 +46,7 @@ variable "feature_tag" {
 variable "gateway_log_level" {
   description = "The log level for API Gateway, which effects the log entries pushed to Amazon CloudWatch Logs. The available levels are 'OFF', 'INFO', and 'ERROR'."
   type        = string
-  default     = "ERROR"
+  default     = "INFO"
 
   validation {
     condition     = contains(["OFF", "INFO", "ERROR"], var.gateway_log_level)

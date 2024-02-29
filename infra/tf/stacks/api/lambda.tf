@@ -42,9 +42,9 @@ data "aws_iam_policy_document" "download_lambda" {
 }
 
 
-##################################
+####################################
 # ReverseDownload lambda resources #
-##################################
+####################################
 
 module "reverse_lambda" {
   source = "../../modules/lambda"

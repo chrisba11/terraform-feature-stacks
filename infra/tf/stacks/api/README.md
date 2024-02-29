@@ -34,6 +34,7 @@
 | [aws_api_gateway_resource.reverse](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_resource) | resource |
 | [aws_api_gateway_rest_api.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_rest_api) | resource |
 | [aws_api_gateway_stage.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/api_gateway_stage) | resource |
+| [aws_cloudwatch_log_group.apigw_access_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_s3_bucket.image](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
 | [aws_iam_policy_document.download_lambda](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.reverse_lambda](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
@@ -48,7 +49,7 @@
 | <a name="input_cloudwatch_log_retention_days"></a> [cloudwatch\_log\_retention\_days](#input\_cloudwatch\_log\_retention\_days) | The number of days to retain log events in a Cloudwatch log group. | `number` | `3` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | The name of the environment where resources are being deployed. | `string` | n/a | yes |
 | <a name="input_feature_tag"></a> [feature\_tag](#input\_feature\_tag) | The tag to add to the name of Feature Stack resources. Usually the Jira story number, like 'abc123'. | `string` | `null` | no |
-| <a name="input_gateway_log_level"></a> [gateway\_log\_level](#input\_gateway\_log\_level) | The log level for API Gateway, which effects the log entries pushed to Amazon CloudWatch Logs. The available levels are 'OFF', 'INFO', and 'ERROR'. | `string` | `"ERROR"` | no |
+| <a name="input_gateway_log_level"></a> [gateway\_log\_level](#input\_gateway\_log\_level) | The log level for API Gateway, which effects the log entries pushed to Amazon CloudWatch Logs. The available levels are 'OFF', 'INFO', and 'ERROR'. | `string` | `"INFO"` | no |
 | <a name="input_gateway_metrics_enabled"></a> [gateway\_metrics\_enabled](#input\_gateway\_metrics\_enabled) | Boolean: Amazon CloudWatch metrics are enabled for the API Gateway. | `bool` | `true` | no |
 | <a name="input_lambda_system_log_level"></a> [lambda\_system\_log\_level](#input\_lambda\_system\_log\_level) | The system log level of the Lambda platform. Valid values are 'DEBUG', 'INFO', or 'WARN'. | `string` | `"WARN"` | no |
 | <a name="input_object_version_retention_period"></a> [object\_version\_retention\_period](#input\_object\_version\_retention\_period) | The number of days to retain non-current versions of Lambda package zip archives. | `number` | `1` | no |
