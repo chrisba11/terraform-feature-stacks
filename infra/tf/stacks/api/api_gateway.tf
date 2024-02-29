@@ -56,7 +56,7 @@ resource "aws_api_gateway_stage" "default" {
 
 # CloudWatch logging settings
 resource "aws_cloudwatch_log_group" "apigw_access_logs" {
-  name              = "/aws/apigateway/${aws_api_gateway_stage.default.id}"
+  name              = "/aws/apigateway/${aws_api_gateway_rest_api.default.id}/${local.api_stage_name}"
   retention_in_days = var.cloudwatch_log_retention_days
 }
 
