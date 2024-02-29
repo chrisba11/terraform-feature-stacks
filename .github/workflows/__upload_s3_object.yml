@@ -105,7 +105,7 @@ jobs:
           EXISTING_HASH=$(aws s3api head-object \
             --bucket "${{ inputs.bucket_name }}" \
             --key "${{ inputs.object_key }}" \
-            --query "Metadata.content-md5" --output text 2>/dev/null)
+            --query "Metadata.md5content" --output text 2>/dev/null)
 
           # Capture exit code
           RESULT=$?
@@ -141,4 +141,4 @@ jobs:
           # Upload with custom metadata
           aws s3 cp "${{ inputs.object_name }}" \
             "s3://${{ inputs.bucket_name }}/${{ inputs.object_key }}" \
-            --metadata content-md5="${{ steps.md5-check.outputs.LOCAL_HASH }}"
+            --metadata md5content="${{ steps.md5-check.outputs.LOCAL_HASH }}"
