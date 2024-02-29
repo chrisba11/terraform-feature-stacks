@@ -78,7 +78,7 @@ jobs:
         run: |
 
           # Extract the contents of the zip file
-          unzip -o "${{ inputs.object_name }}" -d extracted_content
+          unzip -oq "${{ inputs.object_name }}" -d extracted_content
 
           # Calculate the local file's hash.
           # Using the md5 hash of the zip file will result in a different hash every time.
