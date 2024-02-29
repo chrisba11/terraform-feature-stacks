@@ -77,8 +77,25 @@ jobs:
         working-directory: artifacts
         run: |
 
-          # Calculate the local file's hash
-          LOCAL_HASH=$(md5sum "${{ inputs.object_name }}" | awk '{ print $1 }')
+          # Extract the contents of the zip file
+          unzip -oq "${{ inputs.object_name }}" -d extracted_content
+
+          # Using the md5 hash of the zip file may result in a different hash every time.
+
+          # Instead, find all regular files within the 'extracted_content' directory
+          # and calculate their MD5 hashes using 'md5sum'.
+          # The '+' at the end of the command ensures efficient execution
+          # by passing multiple filenames at once.
+          # Sort the output based on the second column, which contains file paths.
+          # Calculate the MD5 hash of the concatenated output from the previous 'md5sum' commands.
+          # This represents the combined hash of all files' contents.
+          # Extract the first column of the output, which contains the hash value.
+          LOCAL_HASH=$(find extracted_content -type f -exec md5sum {} + | \
+                      sort -k 2 | \
+                      md5sum | \
+                      awk '{ print $1 }')
+
+          echo "LOCAL_HASH = ${LOCAL_HASH}"
 
           # Allow non-zero exit code without failure
           set +e
@@ -87,13 +104,16 @@ jobs:
           EXISTING_HASH=$(aws s3api head-object \
             --bucket "${{ inputs.bucket_name }}" \
             --key "${{ inputs.object_key }}" \
-            --query "Metadata.content-md5" --output text 2>/dev/null)
+            --query "Metadata.md5content" --output text 2>/dev/null)
 
           # Capture exit code
           RESULT=$?
 
           # Reset default exit code failure behavior
           set -e
+
+          echo "EXISTING_HASH = ${EXISTING_HASH}"
+          echo "RESULT = ${RESULT}"
 
           # Check if the command to retrieve metadata was successful (file exists)
           # and if hashes match
@@ -106,7 +126,6 @@ jobs:
           fi
 
           echo "MATCHES = ${matches}"
-          echo "LOCAL_HASH = ${LOCAL_HASH}"
           echo "MATCHES=${matches}" >> $GITHUB_OUTPUT
           echo "LOCAL_HASH"=${LOCAL_HASH} >> $GITHUB_OUTPUT
 
@@ -121,4 +140,4 @@ jobs:
           # Upload with custom metadata
           aws s3 cp "${{ inputs.object_name }}" \
             "s3://${{ inputs.bucket_name }}/${{ inputs.object_key }}" \
-            --metadata content-md5="${{ steps.md5-check.outputs.LOCAL_HASH }}"
+            --metadata md5content="${{ steps.md5-check.outputs.LOCAL_HASH }}"
