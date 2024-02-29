@@ -25,6 +25,15 @@ locals {
   api_stage_name   = local.is_feature_stack ? var.feature_tag : var.environment
   apigw_arn_prefix = "arn:aws:execute-api:${var.aws_region}:${var.aws_account_id}:${aws_api_gateway_rest_api.default.id}"
 
+  apigw_access_log_format = jsonencode({
+    requestTime    = "$context.requestTime"
+    httpMethod     = "$context.httpMethod"
+    resourcePath   = "$context.resourcePath"
+    status         = "$context.status"
+    protocol       = "$context.protocol"
+    responseLength = "$context.responseLength"
+  })
+
   lambda_package_bucket_name = "${local.bucket_prefix}-lambda-packages-${var.environment}"
   image_bucket_name          = local.is_feature_stack ? "${local.bucket_prefix}-images-${var.feature_tag}" : "${local.bucket_prefix}-images-${var.environment}"
 
