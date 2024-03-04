@@ -39,44 +39,55 @@ jobs:
 
           # Check if the 'artifacts' directory exists
           if [ -d "artifacts" ]; then
-              cd artifacts
-              # Initialize the matrix string
-              MATRIX="{\"include\":["
-              FILES_FOUND=false
+            cd artifacts
+            # Initialize the matrix string
+            MATRIX="{\"include\":["
+            FILES_FOUND=false
 
-              # Remove any spaces from input string
-              STACKS_TO_IGNORE="${INPUT_STACKS_TO_IGNORE// /}"
+            # Remove any spaces from input string
+            STACKS_TO_IGNORE="${INPUT_STACKS_TO_IGNORE// /}"
 
-              # Read stacks to ignore into an array
-              IFS=',' read -ra IGNORED_STACKS_ARRAY <<< "${STACKS_TO_IGNORE}"
+            # Read stacks to ignore into an array
+            IFS=',' read -ra IGNORED_STACKS_ARRAY <<< "${STACKS_TO_IGNORE}"
 
-              # Run through list of files ending with '.tfplan'.
-              for FILE in *.tfplan; do
-                # Check if the globbing found any files by checking if the file exists.
-                if [ -f "$FILE" ]; then
-                  # Extract the stack name from the file name.
-                  STACK_NAME=$(basename "$FILE" .tfplan | sed 's/.*-\(.*\)$/\1/')
+            # Run through list of files ending with '.tfplan'.
+            for FILE in *.tfplan; do
+              # Check if the globbing found any files by checking if the file exists.
+              if [ -f "$FILE" ]; then
+                # Extract the stack name from the file name.
+                STACK_NAME=$(basename "$FILE" .tfplan | sed 's/.*-\(.*\)$/\1/')
 
-                  # If the stack should not be ignored, add it to the matrix.
-                  if [[ ! " ${IGNORED_STACKS_ARRAY[@]} " =~ " ${STACK_NAME} " ]]; then
-                    FILES_FOUND=true
-                    MATRIX="${MATRIX}{\"STACK_NAME\":\"${STACK_NAME}\"},"
+                # Assume the stack should not be ignored initially
+                IGNORE_STACK=false
+
+                # Check if the stack should not be ignored
+                for IGNORED_STACK in "${IGNORED_STACKS_ARRAY[@]}"; do
+                  if [ "$STACK_NAME" = "$IGNORED_STACK" ]; then
+                    IGNORE_STACK=true
+                    break
                   fi
-                fi
-              done
+                done
 
-              # Check if any files were found and processed.
-              if [ "$FILES_FOUND" = true ]; then
-                # Remove the trailing comma from the last entry.
-                MATRIX="${MATRIX%,}]}"
-              else
-                # Ensure MATRIX is assigned the special skip value if no files are found.
-                MATRIX="skip"
+                # If the stack should not be ignored, add it to the matrix.
+                if [ "$IGNORE_STACK" = false ]; then
+                  FILES_FOUND=true
+                  MATRIX="${MATRIX}{\"STACK_NAME\":\"${STACK_NAME}\"},"
+                fi
               fi
-          else
-              # If 'artifacts' directory doesn't exist, format MATRIX with special skip value.
-              echo "No artifacts directory."
+            done
+
+            # Check if any files were found and processed.
+            if [ "$FILES_FOUND" = true ]; then
+              # Remove the trailing comma from the last entry.
+              MATRIX="${MATRIX%,}]}"
+            else
+              # Ensure MATRIX is assigned the special skip value if no files are found.
               MATRIX="skip"
+            fi
+          else
+            # If 'artifacts' directory doesn't exist, format MATRIX with special skip value.
+            echo "No artifacts directory."
+            MATRIX="skip"
           fi
 
           echo "MATRIX=$MATRIX"

@@ -103,6 +103,8 @@ data "aws_iam_policy_document" "permissions_write" {
       "apigateway:PATCH",
       "apigateway:POST",
       "apigateway:PUT",
+      "dynamodb:CreateTable",
+      "dynamodb:UpdateTable",
       "ec2:AllocateAddress",
       "ec2:AssociateNatGatewayAddress",
       "ec2:AssociateRouteTable",
@@ -179,6 +181,7 @@ data "aws_iam_policy_document" "permissions_write" {
       sid    = "NonprodOnlyWritePermissions"
       effect = "Allow"
       actions = [
+        "dynamodb:DeleteTable",
         "ec2:DeleteNatGateway",
         "ec2:DeleteRoute",
         "ec2:DeleteRouteTable",
