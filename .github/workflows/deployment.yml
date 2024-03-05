@@ -194,9 +194,7 @@ jobs:
 
   deploy:
     name: Deploy Lambda Package
-    if: |
-      ${{ !cancelled() && needs.build.result == 'success' &&
-      needs.tf-apply-prereqs.result != 'failure' }}
+    if: ${{ !cancelled() && needs.build.result == 'success' && needs.tf-apply-prereqs.result != 'failure' }}
     needs:
       - env-vars
       - build
@@ -220,9 +218,7 @@ jobs:
 
   tf-plan:
     name: Terraform Plan - Dependent Stacks
-    if: |
-      ${{ !cancelled() && needs.deploy.result == 'success' &&
-      needs.tf-apply-prereqs.result != 'failure' }}
+    if: ${{ !cancelled() && needs.deploy.result == 'success' && needs.tf-apply-prereqs.result != 'failure' }}
     needs:
       - env-vars
       - deploy
