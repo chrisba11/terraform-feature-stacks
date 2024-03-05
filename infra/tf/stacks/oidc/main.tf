@@ -104,6 +104,8 @@ data "aws_iam_policy_document" "permissions_write" {
       "apigateway:POST",
       "apigateway:PUT",
       "dynamodb:CreateTable",
+      "dynamodb:TagResource",
+      "dynamodb:UntagResource",
       "dynamodb:UpdateTable",
       "ec2:AllocateAddress",
       "ec2:AssociateNatGatewayAddress",

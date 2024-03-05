@@ -46,30 +46,38 @@ jobs:
 
             # Remove any spaces from input string
             STACKS_TO_IGNORE="${INPUT_STACKS_TO_IGNORE// /}"
+            echo "STACKS_TO_IGNORE = $STACKS_TO_IGNORE"
 
             # Read stacks to ignore into an array
-            IFS=',' read -ra IGNORED_STACKS_ARRAY <<< "${STACKS_TO_IGNORE}"
+            IGNORED_STACKS_ARRAY=(${(s/,/)STACKS_TO_IGNORE})
+            echo "IGNORED_STACKS_ARRAY = ${IGNORED_STACKS_ARRAY[@]}"
 
             # Run through list of files ending with '.tfplan'.
             for FILE in *.tfplan; do
+              echo "FILE = $FILE"
               # Check if the globbing found any files by checking if the file exists.
               if [ -f "$FILE" ]; then
                 # Extract the stack name from the file name.
                 STACK_NAME=$(basename "$FILE" .tfplan | sed 's/.*-\(.*\)$/\1/')
+                echo "STACK_NAME = $STACK_NAME"
 
                 # Assume the stack should not be ignored initially
                 IGNORE_STACK=false
 
                 # Check if the stack should not be ignored
                 for IGNORED_STACK in "${IGNORED_STACKS_ARRAY[@]}"; do
+                  echo "$STACK_NAME = $IGNORED_STACK ?"
                   if [ "$STACK_NAME" = "$IGNORED_STACK" ]; then
                     IGNORE_STACK=true
                     break
                   fi
+                  echo "IGNORE_STACK = $IGNORE_STACK (in for loop)"
                 done
 
+                echo "IGNORE_STACK = $IGNORE_STACK (final)"
+
                 # If the stack should not be ignored, add it to the matrix.
-                if [ "$IGNORE_STACK" = false ]; then
+                if [ "$IGNORE_STACK" = "false" ]; then
                   FILES_FOUND=true
                   MATRIX="${MATRIX}{\"STACK_NAME\":\"${STACK_NAME}\"},"
                 fi
@@ -82,6 +90,7 @@ jobs:
               MATRIX="${MATRIX%,}]}"
             else
               # Ensure MATRIX is assigned the special skip value if no files are found.
+              echo "No files found that were not ignored."
               MATRIX="skip"
             fi
           else
