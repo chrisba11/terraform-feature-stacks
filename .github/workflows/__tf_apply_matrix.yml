@@ -83,7 +83,7 @@ jobs:
                   echo "IGNORE_STACK = $IGNORE_STACK (in for loop)"
                 done
 
-                echo "IGNORE_STACK = $IGNORE_STACK (final)"
+                echo "IGNORE_STACK = $IGNORE_STACK ($STACK_NAME)"
 
                 # If the stack should not be ignored, add it to the matrix.
                 if [ "$IGNORE_STACK" = "false" ]; then
@@ -91,6 +91,7 @@ jobs:
                   MATRIX="${MATRIX}{\"STACK_NAME\":\"${STACK_NAME}\"},"
                 fi
               fi
+              echo "IGNORE_STACK = $IGNORE_STACK (final)"
             done
 
             # Check if any files were found and processed.
