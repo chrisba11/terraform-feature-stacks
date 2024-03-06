@@ -36,6 +36,7 @@ data "aws_iam_policy_document" "permissions_readonly" {
     effect = "Allow"
     actions = [
       "apigateway:GET",
+      "dynamodb:DescribeContinuousBackups",
       "dynamodb:DescribeTable",
       "ec2:DescribeAddresses",
       "ec2:DescribeInternetGateways",
