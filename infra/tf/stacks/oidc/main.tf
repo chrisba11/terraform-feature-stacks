@@ -38,6 +38,7 @@ data "aws_iam_policy_document" "permissions_readonly" {
       "apigateway:GET",
       "dynamodb:DescribeContinuousBackups",
       "dynamodb:DescribeTable",
+      "dynamodb:DescribeTimeToLive",
       "ec2:DescribeAddresses",
       "ec2:DescribeInternetGateways",
       "ec2:DescribeKeyPairs",
