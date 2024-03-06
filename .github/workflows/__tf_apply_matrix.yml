@@ -44,6 +44,8 @@ jobs:
             MATRIX="{\"include\":["
             FILES_FOUND=false
 
+            INPUT_STACKS_TO_IGNORE=${{ inputs.stacks_to_ignore }}
+
             # Remove any spaces from input string
             STACKS_TO_IGNORE="${INPUT_STACKS_TO_IGNORE// /}"
             echo "STACKS_TO_IGNORE = $STACKS_TO_IGNORE"
