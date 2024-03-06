@@ -63,27 +63,27 @@ jobs:
 
             # Run through list of files ending with '.tfplan'.
             for FILE in *.tfplan; do
-              echo "FILE = $FILE"
+              echo "> FILE = $FILE"
               # Check if the globbing found any files by checking if the file exists.
               if [ -f "$FILE" ]; then
                 # Extract the stack name from the file name.
                 STACK_NAME=$(basename "$FILE" .tfplan | sed 's/.*-\(.*\)$/\1/')
-                echo "STACK_NAME = $STACK_NAME"
+                echo "> > STACK_NAME = $STACK_NAME"
 
                 # Assume the stack should not be ignored initially
                 IGNORE_STACK=false
 
                 # Check if the stack should not be ignored
                 for IGNORED_STACK in "${IGNORED_STACKS_ARRAY[@]}"; do
-                  echo "$STACK_NAME = $IGNORED_STACK ?"
+                  echo "> > > $STACK_NAME = $IGNORED_STACK ?"
                   if [ "$STACK_NAME" = "$IGNORED_STACK" ]; then
                     IGNORE_STACK=true
                     break
                   fi
-                  echo "IGNORE_STACK = $IGNORE_STACK (in for loop)"
+                  echo "> > > IGNORE_STACK = $IGNORE_STACK (in for loop)"
                 done
 
-                echo "IGNORE_STACK = $IGNORE_STACK ($STACK_NAME)"
+                echo "> > IGNORE_STACK = $IGNORE_STACK ($IGNORED_STACK)"
 
                 # If the stack should not be ignored, add it to the matrix.
                 if [ "$IGNORE_STACK" = "false" ]; then
@@ -91,8 +91,10 @@ jobs:
                   MATRIX="${MATRIX}{\"STACK_NAME\":\"${STACK_NAME}\"},"
                 fi
               fi
-              echo "IGNORE_STACK = $IGNORE_STACK (final)"
+              echo "> IGNORE_STACK = $IGNORE_STACK ($STACK_NAME)"
             done
+
+            echo "FILES_FOUND = $FILES_FOUND"
 
             # Check if any files were found and processed.
             if [ "$FILES_FOUND" = true ]; then
